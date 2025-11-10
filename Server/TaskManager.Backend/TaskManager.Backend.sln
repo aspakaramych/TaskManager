@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{143564CD-6634-419C-95EB-0FF6981089D0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AuthService", "AuthService", "{089EA3A4-79C9-4532-B110-74A4D64AED64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.API", "AuthService.API\AuthService.API.csproj", "{DB798DA3-ED12-4DBC-9D5F-937CD6D4116A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.Core", "AuthService.Core\AuthService.Core.csproj", "{DD6201A0-06DF-4311-AB96-F877A2B38AAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.Infrastructure", "AuthService.Infrastructure\AuthService.Infrastructure.csproj", "{60A57BC9-2BFB-4C4A-83AC-2D3905EC19E6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{089EA3A4-79C9-4532-B110-74A4D64AED64} = {143564CD-6634-419C-95EB-0FF6981089D0}
+		{DB798DA3-ED12-4DBC-9D5F-937CD6D4116A} = {089EA3A4-79C9-4532-B110-74A4D64AED64}
+		{DD6201A0-06DF-4311-AB96-F877A2B38AAA} = {089EA3A4-79C9-4532-B110-74A4D64AED64}
+		{60A57BC9-2BFB-4C4A-83AC-2D3905EC19E6} = {089EA3A4-79C9-4532-B110-74A4D64AED64}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB798DA3-ED12-4DBC-9D5F-937CD6D4116A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB798DA3-ED12-4DBC-9D5F-937CD6D4116A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB798DA3-ED12-4DBC-9D5F-937CD6D4116A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB798DA3-ED12-4DBC-9D5F-937CD6D4116A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD6201A0-06DF-4311-AB96-F877A2B38AAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD6201A0-06DF-4311-AB96-F877A2B38AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD6201A0-06DF-4311-AB96-F877A2B38AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD6201A0-06DF-4311-AB96-F877A2B38AAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60A57BC9-2BFB-4C4A-83AC-2D3905EC19E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60A57BC9-2BFB-4C4A-83AC-2D3905EC19E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60A57BC9-2BFB-4C4A-83AC-2D3905EC19E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60A57BC9-2BFB-4C4A-83AC-2D3905EC19E6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
