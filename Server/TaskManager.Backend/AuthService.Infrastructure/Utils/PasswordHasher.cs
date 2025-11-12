@@ -8,12 +8,11 @@ public class PasswordHasher : IPasswordHasher
     
     public string HashPassword(string password)
     {
-        return _passwordHasher.HashPassword(null, password);
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
     public bool VerifyPassword(string password, string passwordHash)
     {
-        var result = _passwordHasher.VerifyHashedPassword(null, passwordHash, password);
-        return result == PasswordVerificationResult.Success;
+        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 }

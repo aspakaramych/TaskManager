@@ -7,8 +7,6 @@ RUN dotnet restore "AuthService.API/AuthService.API.csproj"
 COPY . .
 WORKDIR "/src/AuthService.API"
 RUN dotnet build "AuthService.API.csproj" -c Release -o /app/build
-RUN dotnet tool install --global dotnet-ef
-ENV PATH="${PATH}:/root/.dotnet/tools"
 
 FROM build AS publish
 RUN dotnet publish "AuthService.API.csproj" -c Release -o /app/publish
@@ -17,5 +15,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 EXPOSE 15378
-
 ENTRYPOINT ["dotnet", "AuthService.API.dll"]

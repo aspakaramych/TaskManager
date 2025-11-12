@@ -14,12 +14,12 @@ public class UserRepository : IUserRepository
         _appDbContext = appDbContext;
     }
     
-    public async Task<User> GetByIdAsync(Guid id)
+    public async Task<User?> GetByIdAsync(Guid id)
     {
         return await _appDbContext.Users.FindAsync(id);
     }
 
-    public async Task<User> GetByEmailAsync(string email)
+    public async Task<User?> GetByEmailAsync(string email)
     {
         return await _appDbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
