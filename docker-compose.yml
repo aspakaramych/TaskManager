@@ -37,9 +37,24 @@ services:
   auth:
     build:
       context: Server/TaskManager.Backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.auth
     ports:
       - "15378:8080" 
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        dotnet ef database update "
+    networks:
+      - app-network
+
+  main:
+    build:
+      context: Server/TaskManager.Backend
+      dockerfile: Dockerfile.main
+    ports:
+      - "16379:8080"
     depends_on:
       db:
         condition: service_healthy

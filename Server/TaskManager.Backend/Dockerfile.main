@@ -1,0 +1,21 @@
+﻿FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+COPY ["MainService.API/MainService.API.csproj", "MainService.API/"]
+COPY ["MainService.Core/MainService.Core.csproj", "MainService.Core/"]
+COPY ["MainService.Infrastructure/MainService.Infrastructure.csproj", "MainService.Infrastructure/"]
+
+RUN dotnet restore "MainService.API/MainService.API.csproj"
+
+COPY . .
+
+WORKDIR "/src/MainService.API"
+
+RUN dotnet build "MainService.API.csproj" -c Release -o /app/build
+RUN dotnet publish "MainService.API.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 16379
+ENTRYPOINT ["dotnet", "MainService.API.dll"]

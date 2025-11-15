@@ -1,23 +1,41 @@
+using MainService.Core.Interfaces;
+using MainService.Infrastructure.Data;
+using MainService.Infrastructure.Repositories;
+using MainService.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(opt =>
+{
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
+builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy("TeacherOnly", policy => policy.RequireClaim("Teacher"));
+});
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    database.Database.Migrate();
+    database.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapOpenApi();
+app.MapScalarApiReference();
 app.MapControllers();
 
 app.Run();

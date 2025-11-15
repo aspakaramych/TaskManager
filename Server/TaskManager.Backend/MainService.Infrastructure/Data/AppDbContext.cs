@@ -14,8 +14,13 @@ public class AppDbContext : DbContext
     public DbSet<Project> Projects { get; set; }
     public DbSet<TaskEntity> Tasks { get; set; }
     public DbSet<Team> Teams { get; set; }
+    
     public DbSet<PickedTask> PickedTasks { get; set; }
     public DbSet<TeamRole> TeamRoles { get; set; }
+    
+    public DbSet<TechTask> TechTasks { get; set; }
+    
+    public DbSet<Subject> Subjects { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +64,11 @@ public class AppDbContext : DbContext
             .HasMany(p => p.Tasks)
             .WithOne(t => t.Project)
             .HasForeignKey(t => t.ProjectId);
+        
+        modelBuilder.Entity<Subject>()
+            .HasOne(s => s.Teacher)
+            .WithOne()
+            .HasForeignKey<Subject>(s => s.TeacherId);
         
         base.OnModelCreating(modelBuilder);
     }

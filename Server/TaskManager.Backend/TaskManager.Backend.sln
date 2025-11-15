@@ -4,7 +4,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{14
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AuthService", "AuthService", "{089EA3A4-79C9-4532-B110-74A4D64AED64}"
 	ProjectSection(SolutionItems) = preProject
-		Dockerfile = Dockerfile
 		.dockerignore = .dockerignore
 	EndProjectSection
 EndProject

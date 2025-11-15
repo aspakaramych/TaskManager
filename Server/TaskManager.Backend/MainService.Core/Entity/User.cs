@@ -9,7 +9,14 @@ public class User
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public UserRole Role { get; set; }
     
     public ICollection<TeamRole> TeamRoles { get; set; }
     public ICollection<PickedTask> PickedTasks { get; set; }
+}
+
+public enum UserRole
+{
+    Teacher,
+    Student
 }
