@@ -32,11 +32,11 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.RegisterAsync(request);
-            return Ok(result);
+            return StatusCode(201, result);
         }
         catch (ArgumentException e)
         {
-            return BadRequest(e.Message);
+            return Conflict(e.Message);
         }
         catch (Exception e)
         {
