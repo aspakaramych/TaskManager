@@ -11,5 +11,5 @@ public class Project
     public Team Team { get; set; }
     public User ProjectManager { get; set; }
     
-    public ICollection<Task> Tasks { get; set; }
+    public ICollection<TaskEntity> Tasks { get; set; }
 }

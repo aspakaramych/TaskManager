@@ -1,6 +1,6 @@
 namespace MainService.Core.Entity;
 
-public class Task
+public class TaskEntity
 {
     public Guid Id { get; set; }
     public string Title { get; set; }
@@ -10,9 +10,9 @@ public class Task
     public Guid ProjectId { get; set; }
     public Guid TaskHeadId { get; set; }
     public Project Project { get; set; }
-    public Task TaskHead { get; set; }
+    public TaskEntity TaskEntityHead { get; set; }
     
-    public ICollection<Task> Children { get; set; }
+    public ICollection<TaskEntity> Children { get; set; }
     
 }
 

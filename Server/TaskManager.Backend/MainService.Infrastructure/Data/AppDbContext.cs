@@ -1,6 +1,5 @@
 using MainService.Core.Entity;
 using Microsoft.EntityFrameworkCore;
-using Task = MainService.Core.Entity.Task;
 
 namespace MainService.Infrastructure.Data;
 
@@ -13,7 +12,7 @@ public class AppDbContext : DbContext
     
     public DbSet<User> Users { get; set; }
     public DbSet<Project> Projects { get; set; }
-    public DbSet<Task> Tasks { get; set; }
+    public DbSet<TaskEntity> Tasks { get; set; }
     public DbSet<Team> Teams { get; set; }
     public DbSet<PickedTask> PickedTasks { get; set; }
     public DbSet<TeamRole> TeamRoles { get; set; }
@@ -51,9 +50,9 @@ public class AppDbContext : DbContext
             .HasForeignKey<Project>(p => p.TeamId)
             .OnDelete(DeleteBehavior.Cascade);
         
-        modelBuilder.Entity<Task>()
+        modelBuilder.Entity<TaskEntity>()
             .HasMany(t => t.Children)
-            .WithOne(t => t.TaskHead)
+            .WithOne(t => t.TaskEntityHead)
             .HasForeignKey(t => t.TaskHeadId);
         
         modelBuilder.Entity<Project>()
