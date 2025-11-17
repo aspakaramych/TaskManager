@@ -1,7 +1,7 @@
-using MainService.Core.DTOs;
-using MainService.Core.Entity;
+using AuthService.Core.DTOs;
+using AuthService.Core.Entity;
 
-namespace MainService.Core.Interfaces;
+namespace AuthService.Core.Interfaces;
 
 public interface ISubjectService
 {

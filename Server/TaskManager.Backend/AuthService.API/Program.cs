@@ -47,6 +47,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.Zero
         };
     });
+
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("AllowClient", policy =>
+    {
+        policy.WithOrigins("http://localhost:14000")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -61,6 +71,7 @@ using (var scope = app.Services.CreateScope())
     database.Database.Migrate();
     database.Database.EnsureCreated();
 }
+app.UseCors("AllowClient");
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.UseHttpsRedirection();

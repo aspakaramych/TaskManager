@@ -1,7 +1,7 @@
-using MainService.Core.Entity;
+using AuthService.Core.Entity;
 using Task = System.Threading.Tasks.Task;
 
-namespace MainService.Core.Interfaces;
+namespace AuthService.Core.Interfaces;
 
 public interface IProjectRepository
 {

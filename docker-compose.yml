@@ -34,10 +34,20 @@ services:
     networks:
       - app-network
 
+  client:
+    build:
+      context: Client/TaskManagerClient
+      dockerfile: Dockerfile
+    container_name: client
+    ports:
+      - "14000:5173"
+    networks:
+      - app-network
+
   auth:
     build:
       context: Server/TaskManager.Backend
-      dockerfile: Dockerfile.auth
+      dockerfile: Server/TaskManager.Backend/Dockerfile
     ports:
       - "15378:8080" 
     depends_on:
@@ -49,20 +59,6 @@ services:
     networks:
       - app-network
 
-  main:
-    build:
-      context: Server/TaskManager.Backend
-      dockerfile: Dockerfile.main
-    ports:
-      - "16379:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    command: >
-      sh -c "
-        dotnet ef database update "
-    networks:
-      - app-network
 
 volumes:
   postgres_data:

@@ -1,10 +1,10 @@
-using MainService.Core.Entity;
-using MainService.Core.Interfaces;
-using MainService.Infrastructure.Data;
+using AuthService.Core.Entity;
+using AuthService.Core.Interfaces;
+using AuthService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;
 
-namespace MainService.Infrastructure.Repositories;
+namespace AuthService.Infrastructure.Repositories;
 
 public class ProjectRepository : IProjectRepository
 {

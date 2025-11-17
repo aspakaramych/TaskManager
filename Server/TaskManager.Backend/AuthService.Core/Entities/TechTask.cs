@@ -1,4 +1,4 @@
-namespace MainService.Core.Entity;
+namespace AuthService.Core.Entity;
 
 public class TechTask
 {

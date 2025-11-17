@@ -1,4 +1,4 @@
-namespace MainService.Core.DTOs;
+namespace AuthService.Core.DTOs;
 
 public class SubjectResponse
 {

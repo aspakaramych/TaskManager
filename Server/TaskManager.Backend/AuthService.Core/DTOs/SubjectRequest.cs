@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MainService.Core.DTOs;
+namespace AuthService.Core.DTOs;
 
 public class SubjectRequest
 {

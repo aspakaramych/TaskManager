@@ -1,12 +1,14 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using MainService.Core.DTOs;
-using MainService.Core.Entity;
+using AuthService.Core.DTOs;
+using AuthService.Core.Interfaces;
+using AuthService.Core.DTOs;
+using AuthService.Core.Entity;
 using MainService.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MainService.API.Controllers;
+namespace AuthService.API.Controllers;
 
 [ApiController]
 [Route("/api/teacher")]
