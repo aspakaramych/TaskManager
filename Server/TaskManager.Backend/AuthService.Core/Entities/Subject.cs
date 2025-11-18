@@ -1,6 +1,5 @@
-using AuthService.Core.Entities;
 
-namespace AuthService.Core.Entity;
+namespace AuthService.Core.Entities;
 
 public class Subject
 {

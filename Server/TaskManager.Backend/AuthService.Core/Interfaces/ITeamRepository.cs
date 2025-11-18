@@ -1,11 +1,9 @@
-using AuthService.Core.Entity;
-using Task = System.Threading.Tasks.Task;
+using AuthService.Core.Entities;
 
 namespace AuthService.Core.Interfaces;
 
-public interface ITeamRepository
+public interface ITeamRepository : IRepository<Team>
 {
-    Task AddTeam(Team team, Guid userId);
-    Task DeleteTeam(Team team);
-    Task AddUserToTeam(Guid userId, Guid teamId, RoleType role);
+    Task<Team> GetWithRolesAsync(Guid teamId);
+    Task<IEnumerable<Team>> GetByUserIdAsync(Guid userId);
 }

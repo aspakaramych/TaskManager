@@ -1,5 +1,5 @@
 using AuthService.Core.DTOs;
-using AuthService.Core.Entity;
+using AuthService.Core.Entities;
 using AuthService.Core.Interfaces;
 
 namespace AuthService.Infrastructure.Services;

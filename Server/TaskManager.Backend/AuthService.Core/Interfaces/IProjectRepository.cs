@@ -1,12 +1,11 @@
-using AuthService.Core.Entity;
+using AuthService.Core.Entities;
 using Task = System.Threading.Tasks.Task;
 
 namespace AuthService.Core.Interfaces;
 
-public interface IProjectRepository
+public interface IProjectRepository : IRepository<Project>
 {
-    Task AddAsync(Project project);
-    Task UpdateAsync(Project project);
-    Task DeleteAsync(Project project);
-    Task<ICollection<Project>> GetProjectsForUserAsync(Guid userId);
+    Task<ICollection<Project>> GetByTeamIdAsync(Guid teamId);
+    Task<ICollection<Project>> GetByProjectManagerIdAsync(Guid projectManagerId);
+    Task<Project> GetWithTasksAsync(Guid projectId);
 }

@@ -3,7 +3,6 @@ using System.Security.Claims;
 using AuthService.Core.DTOs;
 using AuthService.Core.Interfaces;
 using AuthService.Core.DTOs;
-using AuthService.Core.Entity;
 using MainService.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

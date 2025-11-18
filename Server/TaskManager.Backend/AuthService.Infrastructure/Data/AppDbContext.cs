@@ -1,5 +1,4 @@
 using AuthService.Core.Entities;
-using AuthService.Core.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Infrastructure.Data;

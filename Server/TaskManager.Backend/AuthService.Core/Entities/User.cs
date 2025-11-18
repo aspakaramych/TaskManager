@@ -1,5 +1,3 @@
-using AuthService.Core.Entity;
-
 namespace AuthService.Core.Entities;
 
 public class User

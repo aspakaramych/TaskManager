@@ -1,4 +1,4 @@
-using AuthService.Core.Entity;
+using AuthService.Core.Entities;
 using AuthService.Core.Interfaces;
 using AuthService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -14,27 +14,50 @@ public class ProjectRepository : IProjectRepository
     {
         _appDbContext = appDbContext;
     }
-    
-    public async Task AddAsync(Project project)
+
+
+    public async Task<Project> GetByIdAsync(Guid id)
     {
-        await _appDbContext.Projects.AddAsync(project);
+        return await _appDbContext.Projects.FindAsync(id);
+    }
+
+    public async Task<ICollection<Project>> GetAllAsync()
+    {
+        return await _appDbContext.Projects.ToListAsync();
+    }
+
+    public async Task AddAsync(Project entity)
+    {
+        await _appDbContext.Projects.AddAsync(entity);
+    }
+
+    public async Task UpdateAsync(Project entity)
+    {
+        _appDbContext.Projects.Update(entity);
+    }
+
+    public async Task DeleteAsync(Project entity)
+    {
+        _appDbContext.Projects.Remove(entity);
+    }
+
+    public async Task SaveChangesAsync()
+    {
         await _appDbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(Project project)
+    public async Task<ICollection<Project>> GetByTeamIdAsync(Guid teamId)
     {
-        _appDbContext.Projects.Update(project);
-        await _appDbContext.SaveChangesAsync();
+        return await _appDbContext.Projects.Where(p => p.TeamId == teamId).ToListAsync();
     }
 
-    public async Task DeleteAsync(Project project)
+    public async Task<ICollection<Project>> GetByProjectManagerIdAsync(Guid projectManagerId)
     {
-        _appDbContext.Projects.Remove(project);
-        await _appDbContext.SaveChangesAsync();
+        return await _appDbContext.Projects.Where(p => p.ProjectManagerId == projectManagerId).ToListAsync();
     }
 
-    public async Task<ICollection<Project>> GetProjectsForUserAsync(Guid userId)
+    public async Task<Project> GetWithTasksAsync(Guid projectId)
     {
-        return await _appDbContext.Projects.Where(p => p.Team.TeamRoles.Any(role => role.UserId == userId)).ToListAsync();
+        return await _appDbContext.Projects.Include(p => p.Tasks).FirstOrDefaultAsync(p => p.Id == projectId);
     }
 }

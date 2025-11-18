@@ -1,10 +1,8 @@
-using AuthService.Core.Entity;
+using AuthService.Core.Entities;
 
 namespace AuthService.Core.Interfaces;
 
-public interface ISubjectRepository
+public interface ISubjectRepository : IRepository<Subject>
 {
-    Task AddAsync(Subject subject);
-    Task UpdateAsync(Subject subject);
-    Task DeleteAsync(Subject subject);
+    Task<IEnumerable<Subject>> GetByTeacherIdAsync(Guid teacherId);
 }

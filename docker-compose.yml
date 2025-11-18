@@ -47,7 +47,7 @@ services:
   auth:
     build:
       context: Server/TaskManager.Backend
-      dockerfile: Server/TaskManager.Backend/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "15378:8080" 
     depends_on:

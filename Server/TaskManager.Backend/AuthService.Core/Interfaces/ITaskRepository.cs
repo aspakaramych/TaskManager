@@ -1,11 +1,11 @@
-using AuthService.Core.Entity;
-using Task = System.Threading.Tasks.Task;
+using AuthService.Core.Entities;
 
 namespace AuthService.Core.Interfaces;
 
-public interface ITaskRepository
+public interface ITaskRepository : IRepository<TaskEntity>
 {
-    Task AddTask(TaskEntity task);
-    Task UpdateTask(TaskEntity task);
-    Task DeleteTask(TaskEntity task);
+    Task<IEnumerable<TaskEntity>> GetByProjectIdAsync(Guid projectId);
+    Task<IEnumerable<TaskEntity>> GetByTaskHeadIdAsync(Guid taskHeadId);
+    Task<IEnumerable<TaskEntity>> GetTasksWithChildrenAsync(Guid taskId);
+    Task UpdateTaskProgressAsync(Guid taskId, TaskProgress progress);
 }
