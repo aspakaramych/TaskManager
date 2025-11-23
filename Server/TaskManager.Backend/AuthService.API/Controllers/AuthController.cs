@@ -14,14 +14,15 @@ public class AuthController : ControllerBase
     {
         _authService = authService;
     }
-    
+
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { 
-                success = false, 
+            return BadRequest(new
+            {
+                success = false,
                 message = "Validation failed",
                 errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
@@ -29,6 +30,7 @@ public class AuthController : ControllerBase
                 )
             });
         }
+
         try
         {
             var result = await _authService.RegisterAsync(request);
@@ -43,14 +45,15 @@ public class AuthController : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
-    
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { 
-                success = false, 
+            return BadRequest(new
+            {
+                success = false,
                 message = "Validation failed",
                 errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
@@ -58,6 +61,7 @@ public class AuthController : ControllerBase
                 )
             });
         }
+
         try
         {
             var result = await _authService.LoginAsync(request);
@@ -72,13 +76,15 @@ public class AuthController : ControllerBase
             return StatusCode(500, e.Message);
         }
     }
+
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { 
-                success = false, 
+            return BadRequest(new
+            {
+                success = false,
                 message = "Validation failed",
                 errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
@@ -86,12 +92,15 @@ public class AuthController : ControllerBase
                 )
             });
         }
+
         try
+
         {
             var result = await _authService.RefreshTokenAsync(request);
             return Ok(result);
         }
-        catch (UnauthorizedAccessException)
+        catch
+            (UnauthorizedAccessException)
         {
             return Unauthorized();
         }

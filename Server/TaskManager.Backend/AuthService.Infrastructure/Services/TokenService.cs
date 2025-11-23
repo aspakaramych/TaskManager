@@ -4,6 +4,7 @@ using System.Text;
 using AuthService.Core.Configurations;
 using AuthService.Core.Entities;
 using AuthService.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthService.Infrastructure.Services;
@@ -12,11 +13,12 @@ public class TokenService : ITokenService
 {
     private readonly JwtSettings _jwtSettings;
     private readonly SymmetricSecurityKey _signingKey;
-
-    public TokenService(JwtSettings jwtSettings)
+    private readonly ILogger<TokenService> _logger;
+    public TokenService(JwtSettings jwtSettings, ILogger<TokenService> logger)
     {
         _jwtSettings = jwtSettings;
         _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
+        _logger = logger;
     }
 
     public string GenerateAccessToken(User user)
@@ -27,8 +29,9 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new Claim(JwtRegisteredClaimNames.Typ, nameof(user.Role))
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
         };
+        _logger.LogInformation(nameof(user.Role));
         var creds = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(issuer: _jwtSettings.Issuer, audience: _jwtSettings.Audience, claims: claims,

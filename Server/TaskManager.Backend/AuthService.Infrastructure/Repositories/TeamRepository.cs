@@ -28,31 +28,31 @@ public class TeamRepository : ITeamRepository
 
     public async Task AddAsync(Team entity)
     {
-        throw new NotImplementedException();
+        await _context.Teams.AddAsync(entity);
     }
 
     public async Task UpdateAsync(Team entity)
     {
-        throw new NotImplementedException();
+        _context.Teams.Update(entity);
     }
 
     public async Task DeleteAsync(Team entity)
     {
-        throw new NotImplementedException();
+        _context.Teams.Remove(entity);
     }
 
     public async Task SaveChangesAsync()
     {
-        throw new NotImplementedException();
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Team> GetWithRolesAsync(Guid teamId)
     {
-        throw new NotImplementedException();
+        return await _context.Teams.Include(t => t.TeamRoles).Where(t => t.Id == teamId).FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Team>> GetByUserIdAsync(Guid userId)
     {
-        throw new NotImplementedException();
+        return await _context.Teams.Include(t => t.TeamRoles).Where(t => t.TeamRoles.Any(tr => tr.UserId == userId)).ToListAsync();
     }
 }

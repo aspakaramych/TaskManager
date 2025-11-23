@@ -24,6 +24,15 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IAuthService, AuthService.Infrastructure.Services.AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
+builder.Services.AddScoped<ITeamRoleRepository, TeamRoleRepository>();
+builder.Services.AddScoped<ITechTaskRepository, TechTaskRepository>();
+builder.Services.AddScoped<ITechService, TechService>();
 builder.Services.AddScoped<JwtSettings>(provider =>
 {
     var settings = new JwtSettings();
@@ -57,10 +66,14 @@ builder.Services.AddCors(opt =>
             .AllowAnyHeader();
     });
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy("TeacherOnly", policy => policy.RequireClaim("Teacher"));
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
