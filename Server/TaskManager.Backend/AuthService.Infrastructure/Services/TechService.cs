@@ -36,13 +36,15 @@ public class TechService : ITechService
         };
 
         await _techTaskRepository.AddAsync(techTask);
+        await _techTaskRepository.SaveChangesAsync();
 
         // 4. Возвращаем результат
         return new TechTaskGetDto
         {
             Id = techTask.Id,
             Description = techTask.Description,
-            Deadline = techTask.Deadline
+            Deadline = techTask.Deadline,
+            SubjectId = subjectId
         };
     }
 
@@ -54,7 +56,20 @@ public class TechService : ITechService
         {
             Id = t.Id,
             Description = t.Description,
-            Deadline = t.Deadline
+            Deadline = t.Deadline,
+            SubjectId = subjectId
+        });
+    }
+
+    public async Task<IEnumerable<TechTaskGetDto>> GetTechTasksAsync()
+    {
+        var techTasks = await _techTaskRepository.GetAllAsync();
+        return techTasks.Select(t => new TechTaskGetDto
+        {
+            Id = t.Id,
+            Description = t.Description,
+            Deadline = t.Deadline,
+            SubjectId = t.SubjectId
         });
     }
 

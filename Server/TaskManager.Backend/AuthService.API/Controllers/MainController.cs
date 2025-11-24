@@ -95,12 +95,37 @@ public class MainController : ControllerBase
         return CreatedAtAction(nameof(CreateProject), null);
     }
 
-    [HttpGet("{subjectId}")]
-    [Authorize(Roles = nameof(UserRole.Teacher))]
-    public async Task<IActionResult> GetTechTask(Guid subjectId)
+    [HttpGet("{subjectId}/techtasks")]
+    public async Task<IActionResult> GetTechTaskBySubject(Guid subjectId)
     {
         var response = await _techService.GetTechTasksBySubjectIdAsync(subjectId);
         return Ok(response);
     }
-    
+
+    [HttpGet("techtasks")]
+    public async Task<IActionResult> GetTechTask()
+    {
+        var response = await _techService.GetTechTasksAsync();
+        return Ok(response);
+    }
+
+
+    [HttpPost("{subjectId}/techtasks")]
+    [Authorize(Roles = nameof(UserRole.Teacher))]
+    public async Task<IActionResult> CreateTechTask(Guid subjectId, [FromBody] TechTaskCreateDto techTaskRequest)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        } 
+
+        var response = await _techService.CreateTechTaskAsync(techTaskRequest, reqUserId, subjectId);
+        return CreatedAtAction(nameof(CreateTechTask), new { id = response.Id }, response);
+    }
 }

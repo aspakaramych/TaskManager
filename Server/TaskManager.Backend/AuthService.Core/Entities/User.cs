@@ -15,6 +15,8 @@ public class User
     public ICollection<RefreshToken> RefreshTokens { get; set; }
     public ICollection<TeamRole> TeamRoles { get; set; }
     public ICollection<PickedTask> PickedTasks { get; set; }
+    
+    public ICollection<Project> Projects { get; set; }
 }
 
 public enum UserRole

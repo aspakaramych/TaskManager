@@ -54,7 +54,8 @@ public class ProjectService : IProjectService
                 Id = project.Id,
                 Title = project.Title,
                 Description = project.Description,
-                Role = roleInProject
+                Role = roleInProject,
+                TeamId = project.TeamId
             });
         }
 
@@ -70,17 +71,13 @@ public class ProjectService : IProjectService
             Title = $"Команда проекта {createDto.Title}",
             Description = "Автоматически созданная команда",
         };
-
-        await _teamRepository.AddAsync(newTeam);
-
         var pmRole = new TeamRole
         {
             UserId = userId,
             TeamId = newTeam.Id,
             Role = RoleType.ProjectManager
         };
-        await _teamRoleRepository.AddAsync(pmRole);
-
+        
         var project = new Project
         {
             Id = Guid.NewGuid(),
@@ -89,8 +86,10 @@ public class ProjectService : IProjectService
             TeamId = newTeam.Id, 
             ProjectManagerId = userId 
         };
-
+        newTeam.ProjectId = project.Id;
+        await _teamRepository.AddAsync(newTeam);
         await _projectRepository.AddAsync(project);
+        await _teamRoleRepository.AddAsync(pmRole);
         await _projectRepository.SaveChangesAsync();
     }
 

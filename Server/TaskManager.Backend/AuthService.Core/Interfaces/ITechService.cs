@@ -7,6 +7,8 @@ public interface ITechService
     Task<TechTaskGetDto> CreateTechTaskAsync(TechTaskCreateDto dto, Guid teacherId, Guid subjectId);
 
     Task<IEnumerable<TechTaskGetDto>> GetTechTasksBySubjectIdAsync(Guid subjectId);
+    
+    Task<IEnumerable<TechTaskGetDto>> GetTechTasksAsync();
 
     Task UpdateTechTaskAsync(Guid techTaskId, TechTaskCreateDto dto, Guid teacherId, Guid subjectId);
 

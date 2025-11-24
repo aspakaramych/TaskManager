@@ -67,8 +67,8 @@ public class AppDbContext : DbContext
         
         modelBuilder.Entity<Project>()
             .HasOne(p => p.ProjectManager)
-            .WithOne()
-            .HasForeignKey<Project>(p => p.ProjectManagerId);
+            .WithMany(u => u.Projects)
+            .HasForeignKey(p => p.ProjectManagerId);
         
         modelBuilder.Entity<Project>()
             .HasOne(p => p.Team)
