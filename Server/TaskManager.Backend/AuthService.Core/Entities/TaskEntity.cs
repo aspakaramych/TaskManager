@@ -10,7 +10,7 @@ public class TaskEntity
     public DateTime Deadline { get; set; }
     public TaskProgress Progress { get; set; }
     public Guid ProjectId { get; set; }
-    public Guid TaskHeadId { get; set; }
+    public Guid? TaskHeadId { get; set; }
     public Project Project { get; set; }
     public TaskEntity TaskEntityHead { get; set; }
     

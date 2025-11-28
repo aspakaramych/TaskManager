@@ -65,4 +65,35 @@ public class TaskRepository : ITaskRepository
         var task = await _appDbContext.Tasks.FindAsync(taskId);
         task.Progress = progress;
     }
+
+    public async Task<IEnumerable<TaskEntity>> GetProjectTasksAsTreeAsync(Guid projectId)
+    {
+        var allProjectTasks = await _appDbContext.Tasks
+            .Where(t => t.ProjectId == projectId)
+            .ToListAsync();
+        
+        var rootTasks = allProjectTasks
+            .Where(t => t.TaskHeadId == null)
+            .ToList();
+        
+        var taskDictionary = allProjectTasks.ToDictionary(t => t.Id);
+        
+        foreach (var task in allProjectTasks)
+        {
+            if (task.Children == null)
+            {
+                task.Children = new List<TaskEntity>();
+            }
+            
+            if (task.TaskHeadId.HasValue && taskDictionary.TryGetValue(task.TaskHeadId.Value, out var parentTask))
+            {
+                if (parentTask.Children == null) 
+                {
+                    parentTask.Children = new List<TaskEntity>();
+                }
+                parentTask.Children.Add(task);
+            }
+        }
+        return rootTasks;
+    }
 }

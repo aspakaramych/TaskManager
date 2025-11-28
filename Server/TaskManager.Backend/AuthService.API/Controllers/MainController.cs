@@ -15,13 +15,15 @@ public class MainController : ControllerBase
     private readonly ISubjectService _subjectService;
     private readonly IProjectService _projectService;
     private readonly ITechService _techService;
+    private readonly ITaskService _taskService;
     private readonly ILogger<MainController> _logger;
 
-    public MainController(ISubjectService subjectService, ILogger<MainController> logger, IProjectService projectService, ITechService techService)
+    public MainController(ISubjectService subjectService, ILogger<MainController> logger, IProjectService projectService, ITechService techService, ITaskService taskService)
     {
         _subjectService = subjectService;
         _projectService = projectService;
         _techService = techService;
+        _taskService = taskService;
         _logger = logger;
     }
     
@@ -127,5 +129,42 @@ public class MainController : ControllerBase
 
         var response = await _techService.CreateTechTaskAsync(techTaskRequest, reqUserId, subjectId);
         return CreatedAtAction(nameof(CreateTechTask), new { id = response.Id }, response);
+    }
+
+    [HttpGet("project/{projectId}/tasks")]
+    public async Task<IActionResult> GetProjectTask(Guid projectId)
+    {
+        var projects = await _taskService.GetTasks(projectId);
+        return Ok(projects);
+    }
+
+    [HttpPost("project/{projectId}/tasks")]
+    [Authorize]
+    public async Task<IActionResult> CreateProjectTask(Guid projectId, [FromBody] TaskCreateDto taskCreateDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.CreateTask(taskCreateDto, projectId, reqUserId);
+            return Ok();
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            return Unauthorized(e.Message);
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 }
