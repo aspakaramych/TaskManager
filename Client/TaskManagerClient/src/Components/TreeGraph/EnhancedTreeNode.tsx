@@ -1,0 +1,157 @@
+import React, { useState } from 'react';
+import { Task } from '../../types';
+
+interface EnhancedTreeNodeProps {
+  task: Task;
+  onTaskClick: (task: Task) => void;
+  onToggle?: () => void;
+  isOpen?: boolean;
+  hasChildren?: boolean;
+  isCompleted?: boolean;
+  isRootLevel?: boolean;
+}
+
+export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
+  task,
+  onTaskClick,
+  onToggle,
+  isOpen = false,
+  hasChildren = false,
+  isCompleted = false,
+  isRootLevel = false
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onTaskClick(task);
+  };
+
+  const handleToggleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggle) onToggle();
+  };
+
+  const getNodeStyles = () => {
+    const baseStyles = {
+      background: isCompleted ? '#e8f5e8' : '#ffffff',
+      borderColor: isCompleted ? '#2ed573' : isRootLevel ? '#ffa502' : '#3742fa',
+      color: isCompleted ? '#2d3748' : '#2d3748'
+    };
+
+    if (isHovered) {
+      baseStyles.background = isCompleted ? '#d4edda' : '#f8f9fa';
+    }
+
+    return baseStyles;
+  };
+
+  const getStatusStyles = () => {
+    if (isCompleted) {
+      return { background: '#2ed573', color: 'white' };
+    }
+    return { background: '#ffa502', color: 'white' };
+  };
+
+  const getPriorityStyles = () => {
+    if (!task.dueDate) return { background: '#95a5a6', color: 'white' };
+    
+    const dueDate = new Date(task.dueDate);
+    const today = new Date();
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return { background: '#ff4757', color: 'white' }; // Просрочено
+    if (diffDays <= 3) return { background: '#ffa502', color: 'white' }; // Срочно
+    if (diffDays <= 7) return { background: '#3742fa', color: 'white' }; // Скоро срок
+    
+    return { background: '#2ed573', color: 'white' }; // Есть время
+  };
+
+  const styles = getNodeStyles();
+  const statusStyles = getStatusStyles();
+  const priorityStyles = getPriorityStyles();
+
+  return (
+    <div 
+      className={`enhanced-tree-node ${isCompleted ? 'completed' : ''} ${isRootLevel ? 'root-level' : ''}`}
+      style={styles}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+    >
+      {/* Заголовок и статус */}
+      <div className="node-header">
+        <div className="task-title">
+          <h4 title={task.title}>
+            {task.title.length > 30 ? task.title.substring(0, 30) + '...' : task.title}
+          </h4>
+          {hasChildren && (
+            <button 
+              className="toggle-btn"
+              onClick={handleToggleClick}
+              title={isOpen ? 'Свернуть подзадачи' : 'Развернуть подзадачи'}
+            >
+              {isOpen ? '−' : '+'}
+            </button>
+          )}
+        </div>
+        <div className="status-badge" style={statusStyles}>
+          {isCompleted ? '✅ Выполнено' : '⏳ В работе'}
+        </div>
+      </div>
+
+      {/* Детали задачи */}
+      <div className="node-details">
+        {task.assignee && (
+          <div className="detail-item assignee">
+            <span className="icon">👤</span>
+            <span className="text" title={task.assignee}>
+              {task.assignee.length > 15 ? task.assignee.substring(0, 15) + '...' : task.assignee}
+            </span>
+          </div>
+        )}
+        
+        {task.dueDate && (
+          <div className="detail-item due-date">
+            <span className="icon">📅</span>
+            <span className="text">
+              {new Date(task.dueDate).toLocaleDateString('ru-RU')}
+            </span>
+          </div>
+        )}
+        
+        {task.childrenIds && task.childrenIds.length > 0 && (
+          <div className="detail-item children-count">
+            <span className="icon">📂</span>
+            <span className="text">
+              {task.childrenIds.length} подзадач
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Приоритет и дополнительные индикаторы */}
+      <div className="node-footer">
+        <div className="priority-indicator" style={priorityStyles}>
+          {!task.dueDate ? 'Без срока' : 
+           new Date(task.dueDate) < new Date() ? 'Просрочено' :
+           'В сроке'}
+        </div>
+        
+        {task.description && task.description !== 'Описание задачи' && (
+          <div className="description-hint" title={task.description}>
+            📝
+          </div>
+        )}
+      </div>
+
+      {/* Индикатор корневой задачи */}
+      {isRootLevel && (
+        <div className="root-indicator" title="Корневая задача">
+          ⭐
+        </div>
+      )}
+    </div>
+  );
+};

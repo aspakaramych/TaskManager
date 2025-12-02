@@ -1,0 +1,76 @@
+.tree-view-container {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tree-view-container h3 {
+  margin-top: 0;
+  color: #2f3542;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.tree-wrapper {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f8f9fa;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.tree-node:hover {
+  background-color: #f8f9fa;
+}
+
+.toggle-icon {
+  cursor: pointer;
+  user-select: none;
+  min-width: 20px;
+  text-align: center;
+}
+
+.task-title {
+  flex: 1;
+  margin: 0 8px;
+  font-weight: 500;
+}
+
+.task-title.completed {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.task-assignee {
+  font-size: 0.8em;
+  color: #666;
+  background: #f1f2f6;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin: 0 4px;
+}
+
+.task-due-date {
+  font-size: 0.8em;
+  color: #ffa502;
+  margin: 0 4px;
+}
+
+.task-status {
+  font-size: 0.9em;
+  margin-left: auto;
+}
+
+/* Стили для react-arborist */
+.arborist-node {
+  width: 100%;
+}

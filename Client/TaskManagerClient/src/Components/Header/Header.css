@@ -1,0 +1,46 @@
+.main-header {
+  width: 100%;
+  max-width: 1200px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  border-radius: 8px 8px 0 0;
+  margin-top: 1rem;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-greeting {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.login-btn, .logout-btn {
+  background: #3742fa;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.logout-btn {
+  background: #ff4757;
+}
+
+.logout-btn:hover {
+  background: #ff3742;
+}
+
+.login-btn:hover {
+  background: #2f38e0;
+}
