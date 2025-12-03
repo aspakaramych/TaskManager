@@ -121,8 +121,8 @@ export const LeftSidebar = ({
                     className="project-item"
                     onClick={() => onProjectSelect(project)}
                   >
-                    {project.name}
-                    {project.creator === currentUser.name && (
+                    {project.title}
+                    {project.creator === currentUser.username && (
                       <span className="creator-badge">Создатель</span>
                     )}
                   </div>

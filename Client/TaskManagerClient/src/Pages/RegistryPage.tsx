@@ -1,8 +1,8 @@
 import {useState} from "react";
 import {useNavigate} from "react-router";
-import {register} from "../Api/authApi.ts";
 import {toast} from "react-toastify";
 import CustomButton from "../Components/CustomButton.tsx";
+import {useAuth} from "../hooks/useAuth.ts";
 
 function RegistryPage(){
     const [username, setUsername] = useState("");
@@ -10,6 +10,7 @@ function RegistryPage(){
     const [password, setPassword] = useState("");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const {register} = useAuth();
 
     const navigate = useNavigate();
 

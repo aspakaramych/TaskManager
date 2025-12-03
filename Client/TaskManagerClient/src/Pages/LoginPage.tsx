@@ -1,21 +1,20 @@
 import CustomButton from "../Components/CustomButton.tsx";
 import {useNavigate} from "react-router";
 import {useState} from "react";
-import {login} from "../Api/authApi.ts";
 import {toast} from 'react-toastify';
+import {useAuth} from "../hooks/useAuth.ts";
 
 function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async () => {
         try {
             await login(email, password);
             toast.success("Вход выполнен успешно!", {autoClose: 2000});
-            setTimeout(() => {
-                navigate("/");
-            }, 500);
+            navigate("/");
 
         } catch (error: any) {
             console.error("Login failed:", error);

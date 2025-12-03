@@ -1,7 +1,10 @@
 export interface User {
-  id: number;
-  name: string;
-  email: string;
+    username: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    accessToken: string,
+    refreshToken: string
 }
 
 export interface Task {
@@ -17,15 +20,15 @@ export interface Task {
 
 export interface Project {
   id: number;
-  name: string;
-  participants: string[];
+  title: string;
+  description: string;
   tasks: Task[];
   creator: string;
 }
 
 export interface NewProjectData {
-  name: string;
-  participants: string[];
+  title: string;
+  description: string;
 }
 
 export interface NewTaskData {

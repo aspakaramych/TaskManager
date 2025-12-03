@@ -1,54 +1,139 @@
 import { useState, useEffect } from 'react';
 import { User } from '../types';
+import { apiLogin, apiRegister, RegisterRequest } from "../Components/Api/authApi.ts";
 
-const MOCK_USERS: User[] = [
-  { id: 1, name: 'Алексей Иванов', email: 'alex@mail.com' },
-  { id: 2, name: 'Мария Петрова', email: 'maria@mail.com' },
-  { id: 3, name: 'Дмитрий Сидоров', email: 'dmitry@mail.com' },
-  { id: 4, name: 'Елена Козлова', email: 'elena@mail.com' },
-  { id: 5, name: 'Сергей Васильев', email: 'sergey@mail.com' },
-  { id: 6, name: 'Ольга Новикова', email: 'olga@mail.com' },
-  { id: 7, name: 'Иван Кузнецов', email: 'ivan@mail.com' },
-  { id: 8, name: 'Анна Смирнова', email: 'anna@mail.com' }
-];
+// Определяем типы данных, которые будут сохраняться отдельно
+type UserData = Omit<User, 'accessToken' | 'refreshToken'>;
+type Tokens = { accessToken: string; refreshToken: string; };
 
 export const useAuth = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+    // 1. Состояние пользователя
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+    // 2. Состояние загрузки (Ключевое для правильного рендера)
+    const [loading, setLoading] = useState(true);
+
+    // =========================================================
+    // 🚀 Эффект для ЧТЕНИЯ ИЗ localStorage (Запускается 1 раз)
+    // =========================================================
     useEffect(() => {
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            try {
-                const parsedUser = JSON.parse(savedUser) as User;
-                requestAnimationFrame(() => {
-                    setCurrentUser(parsedUser);
-                });
-            } catch (error) {
-                console.error('Failed to parse saved user:', error);
+        const loadUserFromStorage = () => {
+            const savedUser = localStorage.getItem('currentUser');
+            const savedTokens = localStorage.getItem('authTokens');
+
+            if (savedUser && savedTokens) {
+                try {
+                    const parsedUserData = JSON.parse(savedUser) as UserData;
+                    const parsedTokens = JSON.parse(savedTokens) as Tokens;
+
+                    const fullUser: User = { ...parsedUserData, ...parsedTokens };
+
+                    // Устанавливаем пользователя синхронно, но только в одном месте,
+                    // избегая проблем с каскадным рендером
+                    setCurrentUser(fullUser);
+
+                } catch (error) {
+                    console.error('Failed to parse saved user or tokens:', error);
+                    // Очищаем невалидные данные
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('authTokens');
+                }
             }
-        }
+
+            // 💡 ВАЖНО: Устанавливаем loading в false после завершения проверки
+            setLoading(false);
+        };
+
+        loadUserFromStorage();
+        // Зависимости отсутствуют ([]), хук запускается только при монтировании
     }, []);
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('currentUser');
+    // =========================================================
+    // 💾 Эффект для ЗАПИСИ В localStorage (Запускается при изменении currentUser)
+    // =========================================================
+    useEffect(() => {
+        if (loading) {
+            // Игнорируем запуск эффекта, пока идет начальная загрузка
+            return;
+        }
+
+        if (currentUser) {
+            const userData: UserData = {
+                username: currentUser.username,
+                email: currentUser.email,
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+            };
+            const tokens: Tokens = {
+                accessToken: currentUser.accessToken,
+                refreshToken: currentUser.refreshToken,
+            };
+
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            localStorage.setItem('authTokens', JSON.stringify(tokens));
+        } else {
+            // Очистка при логауте
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('authTokens');
+        }
+    }, [currentUser, loading]); // Добавляем loading в зависимости для игнорирования первого запуска
+
+
+    // =========================================================
+    // 🔑 ФУНКЦИИ АУТЕНТИФИКАЦИИ
+    // =========================================================
+
+    const login = async (email: string, password: string): Promise<User> => {
+        try {
+            const response = await apiLogin(email, password);
+
+            const loggedInUser: User = {
+                username: response.user.username,
+                email: response.user.email,
+                firstName: response.user.firstName,
+                lastName: response.user.lastName,
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken,
+            };
+
+            setCurrentUser(loggedInUser);
+            return loggedInUser;
+
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const register = async (data: RegisterRequest): Promise<User> => {
+        try {
+            const response = await apiRegister(data);
+            const registeredUser: User = {
+                username: response.user.username,
+                email: response.user.email,
+                firstName: response.user.firstName,
+                lastName: response.user.lastName,
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken,
+            };
+
+            setCurrentUser(registeredUser);
+            return registeredUser;
+
+        } catch (error) {
+            throw error;
+        }
     }
-  }, [currentUser]);
 
-  const login = (user: User) => {
-    setCurrentUser(user);
-  };
+    const logout = () => {
+        setCurrentUser(null);
+    };
 
-  const logout = () => {
-    setCurrentUser(null);
-  };
-
-  return {
-    currentUser,
-    allUsers: MOCK_USERS,
-    login,
-    logout
-  };
+    return {
+        currentUser,
+        loading,
+        isAuthenticated: !!currentUser,
+        login,
+        register,
+        logout
+    };
 };

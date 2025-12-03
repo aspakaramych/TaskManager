@@ -9,22 +9,39 @@ import {
     addChildToParent,
     removeChildFromParent
 } from '../utils/taskTreeUtils';
+import {getAllTasks} from "../Components/Api/mainApi.ts";
 
 export const useProjects = () => {
     const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true); // Добавляем состояние загрузки
+    const [error, setError] = useState<string | null>(null); // Добавляем состояние ошибки
 
     useEffect(() => {
-        const savedProjects = localStorage.getItem('projects');
-        if (savedProjects) {
+        const fetchProjects = async () => {
+            setLoading(true);
+            setError(null);
             try {
-                const parsedProjects = JSON.parse(savedProjects) as Project[];
-                requestAnimationFrame(() => {
-                    setProjects(parsedProjects);
-                });
-            } catch (error) {
-                console.error('Failed to parse saved projects:', error);
+                // 1. Вызов асинхронной функции API
+                const data = await getAllTasks();
+
+                // 2. Установка полученных данных
+                // Можно использовать requestAnimationFrame, хотя для API часто это не требуется,
+                // так как обновление состояния уже асинхронно
+                setProjects(data);
+
+            } catch (err: any) {
+                console.error("Failed to fetch projects:", err);
+                // 3. Обработка ошибки
+                setError(err.message || "Не удалось загрузить проекты.");
+                setProjects([]); // Очищаем проекты при ошибке
+            } finally {
+                // 4. Завершение загрузки
+                setLoading(false);
             }
-        }
+        };
+
+        fetchProjects();
+        // Зависимости отсутствуют, вызывается один раз при монтировании компонента
     }, []);
 
     useEffect(() => {

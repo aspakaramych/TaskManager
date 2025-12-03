@@ -18,7 +18,7 @@ interface LoginResponse {
     user: UserResponse,
 }
 
-interface RegisterRequest {
+export interface RegisterRequest {
     username: string;
     email: string;
     password: string;
@@ -26,7 +26,7 @@ interface RegisterRequest {
     lastName: string;
 }
 
-export const login = async (email: string, password: string): Promise<LoginResponse> => {
+export const apiLogin = async (email: string, password: string): Promise<LoginResponse> => {
     try {
         const response = await authApi.post<LoginResponse>("/login", {email, password})
         return response.data;
@@ -48,7 +48,7 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     }
 }
 
-export const register = async (data: RegisterRequest): Promise<LoginResponse> => {
+export const apiRegister = async (data: RegisterRequest): Promise<LoginResponse> => {
     try {
         const response = await authApi.post<LoginResponse>("/register", data)
         return response.data;
