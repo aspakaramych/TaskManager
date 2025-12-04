@@ -9,7 +9,7 @@ import {
     addChildToParent,
     removeChildFromParent
 } from '../utils/taskTreeUtils';
-import {getAllTasks} from "../Components/Api/mainApi.ts";
+import {getAllProjects} from "../Components/Api/mainApi.ts";
 
 export const useProjects = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -22,7 +22,7 @@ export const useProjects = () => {
             setError(null);
             try {
                 // 1. Вызов асинхронной функции API
-                const data = await getAllTasks();
+                const data = await getAllProjects();
 
                 // 2. Установка полученных данных
                 // Можно использовать requestAnimationFrame, хотя для API часто это не требуется,

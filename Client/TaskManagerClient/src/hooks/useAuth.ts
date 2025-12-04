@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '../types';
 import { apiLogin, apiRegister, RegisterRequest } from "../Components/Api/authApi.ts";
+import {useNavigate} from "react-router";
 
 // Определяем типы данных, которые будут сохраняться отдельно
 type UserData = Omit<User, 'accessToken' | 'refreshToken'>;
@@ -9,6 +10,7 @@ type Tokens = { accessToken: string; refreshToken: string; };
 export const useAuth = () => {
     // 1. Состояние пользователя
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const navigate = useNavigate();
 
     // 2. Состояние загрузки (Ключевое для правильного рендера)
     const [loading, setLoading] = useState(true);
@@ -125,7 +127,10 @@ export const useAuth = () => {
     }
 
     const logout = () => {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('authTokens');
         setCurrentUser(null);
+        navigate("/login")
     };
 
     return {

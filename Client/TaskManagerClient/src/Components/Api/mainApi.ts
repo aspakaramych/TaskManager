@@ -70,7 +70,7 @@ export class TaskCreateDto {
 
 export const getAllProjects = async () : Promise<Project[]> => {
     try {
-        const response = await mainApi.get<Project[]>("/project")
+        const response = await mainApi.get<Project[]>("/")
         return response.data;
 
     } catch (error) {

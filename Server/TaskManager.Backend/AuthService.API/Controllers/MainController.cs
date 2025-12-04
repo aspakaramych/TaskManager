@@ -16,14 +16,16 @@ public class MainController : ControllerBase
     private readonly IProjectService _projectService;
     private readonly ITechService _techService;
     private readonly ITaskService _taskService;
+    private readonly ITeamService _teamService;
     private readonly ILogger<MainController> _logger;
 
-    public MainController(ISubjectService subjectService, ILogger<MainController> logger, IProjectService projectService, ITechService techService, ITaskService taskService)
+    public MainController(ISubjectService subjectService, ILogger<MainController> logger, IProjectService projectService, ITechService techService, ITaskService taskService, ITeamService teamService)
     {
         _subjectService = subjectService;
         _projectService = projectService;
         _techService = techService;
         _taskService = taskService;
+        _teamService = teamService;
         _logger = logger;
     }
     
@@ -165,6 +167,27 @@ public class MainController : ControllerBase
         catch (ArgumentException e)
         {
             return BadRequest(e.Message);
+        }
+    }
+
+    [HttpPost("project/{projectId}/team")]
+    [Authorize]
+    public async Task<IActionResult> AddUserToTeam(Guid projectId, [FromBody] AddUserToTeamDto teamDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+        try
+        {
+            await _teamService.AddUserToTeam(teamDto.TeamId, teamDto.UserId, reqUserId, teamDto.Role);
+            return Ok();
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest();
         }
     }
 }

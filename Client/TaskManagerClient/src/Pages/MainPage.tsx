@@ -201,9 +201,6 @@ const MainPage = () => {
         return task?.parentId === 'root';
     };
 
-    const userProjects = projects.filter(project =>
-        currentUser && project.participants.includes(currentUser.username)
-    );
 
     const isProjectCreator = selectedProject && currentUser &&
         selectedProject.creator === currentUser.username;
@@ -233,7 +230,7 @@ const MainPage = () => {
                     {/* Все остальные компоненты требуют currentUser, поэтому они будут работать
               корректно только если isAuthenticated=true, что скрывает LoginModal */}
                     <LeftSidebar
-                        projects={userProjects}
+                        projects={projects}
                         selectedProject={selectedProject}
                         onProjectSelect={(project: Project) => {
                             setSelectedProject(project);

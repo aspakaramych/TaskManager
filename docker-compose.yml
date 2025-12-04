@@ -39,6 +39,8 @@ services:
       context: Client/TaskManagerClient
       dockerfile: Dockerfile
     container_name: client
+    volumes:
+      - "./Client/TaskManagerClient/src:/app/src"
     ports:
       - "14000:5173"
     networks:
