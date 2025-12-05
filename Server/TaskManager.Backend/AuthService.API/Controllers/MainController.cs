@@ -191,7 +191,7 @@ public class MainController : ControllerBase
         }
     }
 
-    [HttpGet]
+    [HttpGet("users")]
     public async Task<IActionResult> GetUsers()
     {
         var users = await _teamService.GetAllUsers();
