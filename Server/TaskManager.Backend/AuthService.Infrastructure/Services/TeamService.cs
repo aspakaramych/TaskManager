@@ -1,3 +1,4 @@
+using AuthService.Core.DTOs;
 using AuthService.Core.Entities;
 using AuthService.Core.Interfaces;
 
@@ -76,5 +77,15 @@ public class TeamService : ITeamService
 
         await _teamRoleRepository.AddAsync(newTeamRole);
         await _teamRoleRepository.SaveChangesAsync(); // Сохраняем изменения в TeamRoleRepository
+    }
+
+    public async Task<IEnumerable<UserResponse>> GetAllUsers()
+    {
+        var users = await _userRepository.GetAllAsync();
+        return users.Select(u => new UserResponse
+        {
+            Id = u.Id,
+            Username = u.Username,
+        });
     }
 }

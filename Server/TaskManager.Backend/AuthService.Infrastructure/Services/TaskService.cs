@@ -11,18 +11,16 @@ public class TaskService : ITaskService
     private readonly IProjectRepository _projectRepository;
     private readonly ITeamRoleRepository _teamRoleRepository;
     private readonly IPickedTaskRepository _pickedTaskRepository;
-    private readonly IUserRepository _userRepository;
     private readonly ILogger<TaskService> _logger;
 
     public TaskService(ITaskRepository taskRepository, IProjectRepository projectRepository,
         ITeamRoleRepository teamRoleRepository, IPickedTaskRepository pickedTaskRepository,
-        IUserRepository userRepository, ILogger<TaskService> logger)
+       ILogger<TaskService> logger)
     {
         _taskRepository = taskRepository;
         _projectRepository = projectRepository;
         _teamRoleRepository = teamRoleRepository;
         _pickedTaskRepository = pickedTaskRepository;
-        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -110,6 +108,63 @@ public class TaskService : ITaskService
         };
 
         return response;
+    }
+
+    public async Task ConnectTask(Guid projectId, Guid userId, TaskConnect req)
+    {
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        var isPm = await _teamRoleRepository.UserHasRoleInTeamAsync(
+            userId,
+            project.TeamId,
+            RoleType.ProjectManager
+        );
+
+        if (!isPm)
+        {
+            throw new UnauthorizedAccessException($"User {userId} is not authorized to connect tasks in project {projectId}.");
+        }
+        
+        // 2. Проверка самопривязки
+        if (req.TaskId == req.HeadTaskId)
+        {
+            throw new ArgumentException("Cannot connect a task to itself.");
+        }
+
+        // 3. Получение и проверка задач
+        // Получаем обе задачи для проверки существования и принадлежности к проекту
+        var headTask = await _taskRepository.GetByIdAsync(req.HeadTaskId);
+        var subTask = await _taskRepository.GetByIdAsync(req.TaskId);
+
+        // Проверка существования
+        if (headTask == null)
+        {
+            throw new ArgumentException($"Head Task with ID {req.HeadTaskId} not found.");
+        }
+        if (subTask == null)
+        {
+            throw new ArgumentException($"Sub Task with ID {req.TaskId} not found.");
+        }
+        
+        // Проверка принадлежности к проекту
+        if (headTask.ProjectId != projectId || subTask.ProjectId != projectId)
+        {
+            throw new ArgumentException("Both tasks must belong to the specified project.");
+        }
+        
+        // 4. Обновление: Устанавливаем TaskHeadId и сохраняем сущность
+        
+        // Если TaskHeadId уже установлен, нет необходимости в запросе к БД
+        if (subTask.TaskHeadId == req.HeadTaskId)
+        {
+            return;
+        }
+
+        // **Устанавливаем TaskHeadId**
+        subTask.TaskHeadId = req.HeadTaskId;
+
+        // **Вызываем базовый Update**
+        await _taskRepository.UpdateAsync(subTask); 
+        await _taskRepository.SaveChangesAsync();
     }
 
     public async Task AssignTask(Guid taskId, Guid userId)

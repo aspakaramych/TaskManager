@@ -190,4 +190,34 @@ public class MainController : ControllerBase
             return BadRequest();
         }
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _teamService.GetAllUsers();
+        return Ok(users);
+    }
+
+    [HttpPatch("project/{projectId}/task/connect")]
+    [Authorize]
+    public async Task<IActionResult> ConnectTask(Guid projectId, [FromBody] TaskConnect request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.ConnectTask(projectId, reqUserId, request);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+        
+    }
 }
