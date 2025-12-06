@@ -8,4 +8,6 @@ public interface IProjectService
     Task CreateProject(ProjectCreateDto createDto, Guid userId);
     Task UpdateProject(ProjectUpdateDto updateDto, Guid userId);
     Task DeleteProject(Guid projectId, Guid userId);
+
+    Task<ProjectInfoDto> GetProjectInfo(Guid projectId);
 }

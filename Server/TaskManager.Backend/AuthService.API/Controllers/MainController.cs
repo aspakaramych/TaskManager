@@ -197,6 +197,13 @@ public class MainController : ControllerBase
         var users = await _teamService.GetAllUsers();
         return Ok(users);
     }
+    
+    [HttpGet("project/{projectId}")]
+    public async Task<IActionResult> GetAllProjectInfo(Guid projectId)
+    {
+        var project = await _projectService.GetProjectInfo(projectId);
+        return Ok(project);
+    }
 
     [HttpPatch("project/{projectId}/task/connect")]
     [Authorize]
