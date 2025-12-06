@@ -3,15 +3,15 @@ import './LeftSidebar.css';
 import { formatDeadline } from '../../utils/taskTreeUtils';
 
 interface LeftSidebarProps {
-  projects: ProjectInfoDto[];
-  selectedProject: ProjectInfoDto | null;
-  onProjectSelect: (project: ProjectInfoDto) => void;
-  onBack: () => void;
-  onShowCreateProject: () => void;
-  onTaskClick: (task: TaskResponse) => void;
-  onCreateTask: () => void;
-  isProjectCreator: boolean;
-  currentUser: User | null;
+    projects: ProjectInfoDto[];
+    selectedProject: ProjectInfoDto | null;
+    onProjectSelect: (project: ProjectInfoDto) => void;
+    onBack: () => void;
+    onShowCreateProject: () => void;
+    onTaskClick: (task: TaskResponse) => void;
+    onCreateTask: () => void;
+    isProjectCreator: boolean;
+    currentUser: { username: string; email: string; firstName: string; lastName: string; } | null;
 }
 
 const TaskItem = ({
@@ -63,78 +63,94 @@ const TaskItem = ({
 };
 
 export const LeftSidebar = ({
-  projects,
-  selectedProject,
-  onProjectSelect,
-  onBack,
-  onShowCreateProject,
-  onTaskClick,
-  onCreateTask,
-  isProjectCreator,
-  currentUser
-}: LeftSidebarProps) => {
-  const rootLevelTasks = selectedProject?.tasks || [];
+                                projects,
+                                selectedProject,
+                                onProjectSelect,
+                                onBack,
+                                onShowCreateProject,
+                                onTaskClick,
+                                onCreateTask,
+                                isProjectCreator,
+                                currentUser
+                            }: LeftSidebarProps) => {
+    const rootLevelTasks = selectedProject?.tasks || [];
 
-  return (
-    <div className="left-sidebar">
-      {selectedProject ? (
-        <div className="project-details">
-          <button className="back-btn" onClick={onBack}>
-            Назад к проектам
-          </button>
-          <h3>Задачи проекта:</h3>
-          {isProjectCreator && (
-            <button className="create-task-btn" onClick={onCreateTask}>
-              Создать новую задачу
-            </button>
-          )}
-          <div className="tasks-tree">
-            {rootLevelTasks.length > 0 ? (
-              rootLevelTasks.map(task => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onTaskClick={onTaskClick}
-                  depth={0}
-                />
-              ))
+    console.log('LeftSidebar Debug detailed:', {
+        currentUser,
+        currentUserType: typeof currentUser,
+        currentUserUsername: currentUser?.username,
+        isProjectCreator,
+        selectedProjectTitle: selectedProject?.title
+    });
+
+    // Показываем кнопку всем аутентифицированным пользователям в проекте
+    const shouldShowCreateTaskButton = selectedProject && currentUser;
+
+    return (
+        <div className="left-sidebar">
+            {selectedProject ? (
+                <div className="project-details">
+                    <div className="project-actions">
+                        <button className="back-btn" onClick={onBack}>
+                            Назад к проектам
+                        </button>
+                        {shouldShowCreateTaskButton && (
+                            <button className="create-task-btn" onClick={onCreateTask}>
+                                Создать задачу
+                            </button>
+                        )}
+                    </div>
+                    <h3>Задачи проекта:</h3>
+                    <div className="tasks-tree">
+                        {rootLevelTasks.length > 0 ? (
+                            rootLevelTasks.map(task => (
+                                <TaskItem
+                                    key={task.id}
+                                    task={task}
+                                    onTaskClick={onTaskClick}
+                                    depth={0}
+                                />
+                            ))
+                        ) : (
+                            <div className="no-tasks">Задачи пока не созданы</div>
+                        )}
+                    </div>
+                </div>
             ) : (
-              <div className="no-tasks">Задачи пока не созданы</div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="projects-list">
-          {currentUser ? (
-            <>
-              <button className="create-project-btn" onClick={onShowCreateProject}>
-                Создать новый проект
-              </button>
-              <h3>Мои проекты:</h3>
-              {projects.length === 0 ? (
-                <div className="no-projects">Проектов пока нет</div>
-              ) : (
-                projects.map(project => (
-                  <div
-                    key={project.id}
-                    className="project-item"
-                    onClick={() => onProjectSelect(project)}
-                  >
-                    {project.title}
-                    {project.team.users.some(u => u.id === currentUser.username && u.role === 'Creator') && (
-                      <span className="creator-badge">Создатель</span>
+                <div className="projects-list">
+                    {currentUser ? (
+                        <>
+                            <button className="create-project-btn" onClick={onShowCreateProject}>
+                                Создать новый проект
+                            </button>
+                            <h3>Мои проекты:</h3>
+                            {projects.length === 0 ? (
+                                <div className="no-projects">Проектов пока нет</div>
+                            ) : (
+                                projects.map(project => (
+                                    <div
+                                        key={project.id}
+                                        className="project-item"
+                                        onClick={() => onProjectSelect(project)}
+                                    >
+                                        {project.title}
+                                        {project.team.users.some(u =>
+                                            u.username === currentUser.username &&
+                                            u.role === 'Creator'
+                                        ) && (
+                                            <span className="creator-badge">Создатель</span>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </>
+                    ) : (
+                        <div className="login-prompt">
+                            <p>Войдите, чтобы увидеть свои проекты</p>
+                        </div>
                     )}
-                  </div>
-                ))
-              )}
-            </>
-          ) : (
-            <div className="login-prompt">
-              <p>Войдите, чтобы увидеть свои проекты</p>
-            </div>
-          )}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
