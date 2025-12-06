@@ -1,49 +1,36 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Tree } from 'react-d3-tree';
-import { Project, Task } from '../../types';
+import { ProjectInfoDto, TaskResponse, TaskProgress } from '../../types';
 import { EnhancedTreeNode } from './EnhancedTreeNode';
+import { flattenTasks, formatDeadline } from '../../utils/taskTreeUtils';
 import './MultiTreeGraph.css';
 import './EnhancedTreeNode.css';
 
 interface MultiTreeGraphProps {
-  project: Project;
-  onTaskClick: (task: Task) => void;
+  project: ProjectInfoDto;
+  onTaskClick: (task: TaskResponse) => void;
 }
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-const getAllRootLevelTasks = (project: Project): Task[] => {
-  if (!project?.tasks) return [];
-  
-  const rootTask = project.tasks.find(t => t.parentId === 'root');
-  const independentTasks = project.tasks.filter(t => t.parentId === null);
-  
-  const roots: Task[] = [];
-  if (rootTask) roots.push(rootTask);
-  roots.push(...independentTasks);
-  
-  return roots;
-};
 
-const buildTreeFromTask = (task: Task, allTasks: Task[]): any => {
-  const children = allTasks.filter(t => t.parentId === task.id);
-  
+const buildTreeFromTask = (task: TaskResponse): any => {
+  const children = task.children || [];
+
   return {
     name: task.title,
     attributes: {
       id: task.id,
-      isCompleted: task.isCompleted,
-      assignee: task.assignee,
-      dueDate: task.dueDate,
+      isCompleted: task.progress === TaskProgress.Done,
+      assignee: task.assigneeName,
+      deadline: task.deadline,
       description: task.description,
       childrenCount: children.length,
       originalTask: task,
-      isRootLevel: task.parentId === 'root' || task.parentId === null
+      isRootLevel: task.taskHeadId === null
     },
-    children: children.length > 0 ? children.map(child => buildTreeFromTask(child, allTasks)) : []
+    children: children.length > 0 ? children.map(child => buildTreeFromTask(child)) : []
   };
 };
-
-
 
 const SingleTree = ({ treeData, onTaskClick, treeIndex, totalTrees }) => {
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
@@ -77,15 +64,15 @@ const SingleTree = ({ treeData, onTaskClick, treeIndex, totalTrees }) => {
 
     return (
       <foreignObject width={300} height={140} x={-150} y={-70}>
-          <EnhancedTreeNode
-            task={task}
-            onTaskClick={onTaskClick}
-            onToggle={toggleNode}
-            isOpen={!nodeDatum.__rd3t?.collapsed}
-            hasChildren={hasChildren}
-            isCompleted={isCompleted}
-            isRootLevel={isRootLevel}
-          />
+        <EnhancedTreeNode
+          task={task}
+          onTaskClick={onTaskClick}
+          onToggle={toggleNode}
+          isOpen={!nodeDatum.__rd3t?.collapsed}
+          hasChildren={hasChildren}
+          isCompleted={isCompleted}
+          isRootLevel={isRootLevel}
+        />
       </foreignObject>
     );
   }, [onTaskClick]);
@@ -94,8 +81,8 @@ const SingleTree = ({ treeData, onTaskClick, treeIndex, totalTrees }) => {
     <div className={`single-tree-container tree-${treeIndex}`}>
       <div className="tree-header">
         <h4>
-          {treeData.attributes?.isRootLevel && treeData.attributes.originalTask?.parentId === 'root' 
-            ? 'Основное дерево проекта' 
+          {treeData.attributes?.isRootLevel && treeData.attributes.originalTask?.taskHeadId === null
+            ? 'Основное дерево проекта'
             : 'Независимое дерево задач'
           }
         </h4>
@@ -160,9 +147,9 @@ const countCompletedTasks = (treeData) => {
 };
 
 export const MultiTreeGraph = ({ project, onTaskClick }: MultiTreeGraphProps) => {
-  const rootTasks = getAllRootLevelTasks(project);
+  const rootTasks = project.tasks || [];
 
-  const treeData = rootTasks.map(task => buildTreeFromTask(task, project.tasks));
+  const treeData = rootTasks.map(task => buildTreeFromTask(task));
 
   if (rootTasks.length === 0) {
     return (
@@ -175,12 +162,15 @@ export const MultiTreeGraph = ({ project, onTaskClick }: MultiTreeGraphProps) =>
     );
   }
 
+  const flatTasks = flattenTasks(project.tasks);
+  const completedCount = flatTasks.filter(t => t.progress === TaskProgress.Done).length;
+
   return (
     <div className="multi-tree-graph-container">
       <h3>Дерево задач проекта</h3>
       <div className="global-stats">
-        Всего деревьев: {treeData.length} • Всего задач: {project.tasks.length} • 
-        Выполнено: {project.tasks.filter(t => t.isCompleted).length}
+        Всего деревьев: {treeData.length} • Всего задач: {flatTasks.length} •
+        Выполнено: {completedCount}
       </div>
       <div className="trees-container">
         {treeData.map((tree, index) => (

@@ -1,280 +1,229 @@
 import { useState, useEffect } from 'react';
-import { Project, NewProjectData, Task, NewTaskData } from '../types';
+import { ProjectInfoDto, NewProjectData, TaskResponse, NewTaskData } from '../types';
 import {
     canSetParent,
     getAvailableParents,
     areAllChildrenCompleted,
-    updateParentCompletion,
-    removeTaskAndProcessChildren,
-    addChildToParent,
-    removeChildFromParent
+    flattenTasks,
+    findTaskById,
+    getRootTasks
 } from '../utils/taskTreeUtils';
-import {getAllProjects} from "../Components/Api/mainApi.ts";
+import { getAllProjects, getProjectInfo, apiCreateProject, apiCreateTask } from "../Components/Api/mainApi.ts";
 
 export const useProjects = () => {
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true); // Добавляем состояние загрузки
-    const [error, setError] = useState<string | null>(null); // Добавляем состояние ошибки
+    const [projects, setProjects] = useState<ProjectInfoDto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProjects = async () => {
             setLoading(true);
             setError(null);
             try {
-                // 1. Вызов асинхронной функции API
                 const data = await getAllProjects();
 
-                // 2. Установка полученных данных
-                // Можно использовать requestAnimationFrame, хотя для API часто это не требуется,
-                // так как обновление состояния уже асинхронно
-                setProjects(data);
+                // Fetch full project info for each project
+                const projectsWithDetails = await Promise.all(
+                    data.map(async (project) => {
+                        try {
+                            return await getProjectInfo(project.id);
+                        } catch (err) {
+                            console.error(`Failed to fetch project ${project.id}:`, err);
+                            // Return basic project info if detailed fetch fails
+                            return {
+                                id: project.id,
+                                title: project.title,
+                                description: project.description,
+                                tasks: [],
+                                team: {
+                                    id: '',
+                                    teamName: '',
+                                    users: []
+                                }
+                            } as ProjectInfoDto;
+                        }
+                    })
+                );
+
+                setProjects(projectsWithDetails);
 
             } catch (err: any) {
                 console.error("Failed to fetch projects:", err);
-                // 3. Обработка ошибки
                 setError(err.message || "Не удалось загрузить проекты.");
-                setProjects([]); // Очищаем проекты при ошибке
+                setProjects([]);
             } finally {
-                // 4. Завершение загрузки
                 setLoading(false);
             }
         };
 
         fetchProjects();
-        // Зависимости отсутствуют, вызывается один раз при монтировании компонента
     }, []);
 
-    useEffect(() => {
-        if (projects.length > 0) {
-            localStorage.setItem('projects', JSON.stringify(projects));
+    const refreshProject = async (projectId: string) => {
+        try {
+            const updatedProject = await getProjectInfo(projectId);
+            setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
+        } catch (err) {
+            console.error(`Failed to refresh project ${projectId}:`, err);
         }
-    }, [projects]);
-
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    const updateProjectTasks = (projectId: number, updatedTasks: Task[]): Project[] => {
-        return projects.map(project => {
-            if (project.id === projectId) {
-                let finalTasks = [...updatedTasks];
-
-                const changedTasks = updatedTasks.filter(newTask => {
-                    const oldTask = project.tasks.find(t => t.id === newTask.id);
-                    return oldTask && oldTask.isCompleted !== newTask.isCompleted;
-                });
-
-                changedTasks.forEach(changedTask => {
-                    finalTasks = updateParentCompletion(changedTask.id, finalTasks);
-                });
-
-                return { ...project, tasks: finalTasks };
-            }
-            return project;
-        });
     };
 
-    const createProject = (projectData: NewProjectData, creator: string): Project => {
-        const initialTask: Task = {
-            id: Date.now(),
-            title: projectData.name,
-            description: 'Корневая задача проекта',
-            dueDate: '',
-            assignee: '',
-            isCompleted: false,
-            parentId: 'root',
-            childrenIds: []
-        };
+    const createProject = async (projectData: NewProjectData) => {
+        try {
+            await apiCreateProject(projectData.title, projectData.description);
 
-        const project: Project = {
-            id: Date.now(),
-            name: projectData.name,
-            participants: [creator, ...projectData.participants],
-            tasks: [initialTask],
-            creator
-        };
-
-        setProjects(prev => [...prev, project]);
-        return project;
+            // Refresh all projects to get the new one
+            const data = await getAllProjects();
+            const projectsWithDetails = await Promise.all(
+                data.map(async (project) => {
+                    try {
+                        return await getProjectInfo(project.id);
+                    } catch (err) {
+                        console.error(`Failed to fetch project ${project.id}:`, err);
+                        return {
+                            id: project.id,
+                            title: project.title,
+                            description: project.description,
+                            tasks: [],
+                            team: {
+                                id: '',
+                                teamName: '',
+                                users: []
+                            }
+                        } as ProjectInfoDto;
+                    }
+                })
+            );
+            setProjects(projectsWithDetails);
+        } catch (err) {
+            console.error("Failed to create project:", err);
+            throw err;
+        }
     };
 
-    const deleteProject = (projectId: number) => {
+    const deleteProject = (projectId: string) => {
+        // TODO: Implement API call for deleting project
         setProjects(prev => prev.filter(project => project.id !== projectId));
     };
 
-    const updateProject = (projectId: number, updates: Partial<Project>) => {
+    const updateProject = (projectId: string, updates: Partial<ProjectInfoDto>) => {
+        // TODO: Implement API call for updating project
         setProjects(prev => prev.map(project =>
             project.id === projectId ? { ...project, ...updates } : project
         ));
     };
 
-    const addTaskToProject = (projectId: number, taskData: NewTaskData) => {
-        const task: Task = {
-            id: Date.now(),
-            ...taskData,
-            description: 'Описание задачи',
-            isCompleted: false,
-            childrenIds: []
-        };
+    const addTaskToProject = async (projectId: string, taskData: NewTaskData) => {
+        try {
+            const taskCreateDto = {
+                Title: taskData.title,
+                Description: '',
+                Deadline: taskData.deadline
+            };
 
-        const parentId = taskData.parentId === 'root' ? 'root' : taskData.parentId;
+            await apiCreateTask(projectId, taskCreateDto);
 
+            // Refresh project to get updated tasks
+            await refreshProject(projectId);
+        } catch (err) {
+            console.error("Failed to create task:", err);
+            throw err;
+        }
+    };
+
+    const updateTaskInProject = (projectId: string, taskId: string, updates: Partial<TaskResponse>) => {
+        // TODO: Implement API call for updating task
         setProjects(prev => prev.map(project => {
             if (project.id === projectId) {
-                const updatedTasks = [...project.tasks, task];
+                const updateTaskRecursive = (tasks: TaskResponse[]): TaskResponse[] => {
+                    return tasks.map(task => {
+                        if (task.id === taskId) {
+                            return { ...task, ...updates };
+                        }
+                        if (task.children && task.children.length > 0) {
+                            return { ...task, children: updateTaskRecursive(task.children) };
+                        }
+                        return task;
+                    });
+                };
 
-                if (parentId && parentId !== 'root') {
-                    const parentTask = updatedTasks.find(t => t.id.toString() === parentId.toString());
-                    if (parentTask && !parentTask.childrenIds.includes(task.id)) {
-                        parentTask.childrenIds.push(task.id);
-                    }
-                }
-
-                return { ...project, tasks: updatedTasks };
+                return { ...project, tasks: updateTaskRecursive(project.tasks) };
             }
             return project;
         }));
     };
 
-    const updateTaskInProject = (projectId: number, taskId: number, updates: Partial<Task>) => {
+    const deleteTaskFromProject = (projectId: string, taskId: string, removeChildren: boolean = false) => {
+        // TODO: Implement API call for deleting task
         setProjects(prev => prev.map(project => {
             if (project.id === projectId) {
-                const updatedTasks = project.tasks.map(task =>
-                    task.id === taskId ? { ...task, ...updates } : task
-                );
+                const removeTaskRecursive = (tasks: TaskResponse[]): TaskResponse[] => {
+                    return tasks.filter(task => {
+                        if (task.id === taskId) {
+                            return false;
+                        }
+                        if (task.children && task.children.length > 0) {
+                            task.children = removeTaskRecursive(task.children);
+                        }
+                        return true;
+                    });
+                };
 
-                return { ...project, tasks: updateParentCompletion(taskId, updatedTasks) };
+                return { ...project, tasks: removeTaskRecursive(project.tasks) };
             }
             return project;
         }));
     };
 
-    const updateTaskWithParentChange = (
-        projectId: number,
-        taskId: number,
-        updates: Partial<Task>,
-        oldParentId: number | 'root' | null,
-        newParentId: number | 'root' | null
-    ) => {
-        setProjects(prev => prev.map(project => {
-            if (project.id === projectId) {
-                let updatedTasks = project.tasks.map(task =>
-                    task.id === taskId ? { ...task, ...updates } : task
-                );
+    const toggleTaskCompletion = (projectId: string, taskId: string) => {
+        // TODO: Implement API call for toggling task completion
+        const project = projects.find(p => p.id === projectId);
+        if (!project) return;
 
-                if (oldParentId && oldParentId !== 'root') {
-                    updatedTasks = removeChildFromParent(taskId, Number(oldParentId), updatedTasks);
-                }
+        const flatTasks = flattenTasks(project.tasks);
+        const task = flatTasks.find(t => t.id === taskId);
+        if (!task) return;
 
-                if (newParentId && newParentId !== 'root') {
-                    updatedTasks = addChildToParent(taskId, Number(newParentId), updatedTasks);
-                }
+        // Check if all children are completed before marking as done
+        if (!areAllChildrenCompleted(taskId, flatTasks)) {
+            alert('Нельзя отметить задачу как выполненную, пока не выполнены все подзадачи');
+            return;
+        }
 
-                if (oldParentId && oldParentId !== 'root') {
-                    updatedTasks = updateParentCompletion(Number(oldParentId), updatedTasks);
-                }
-
-                if (newParentId && newParentId !== 'root') {
-                    updatedTasks = updateParentCompletion(Number(newParentId), updatedTasks);
-                }
-
-                updatedTasks = updateParentCompletion(taskId, updatedTasks);
-
-                return { ...project, tasks: updatedTasks };
-            }
-            return project;
-        }));
+        updateTaskInProject(projectId, taskId, {
+            progress: task.progress === 'Done' ? 'Created' : 'Done'
+        } as any);
     };
 
-    const deleteTaskFromProject = (projectId: number, taskId: number, removeChildren: boolean = false) => {
-        setProjects(prev => prev.map(project => {
-            if (project.id === projectId) {
-                const taskToDelete = project.tasks.find(t => t.id === taskId);
-                if (!taskToDelete) return project;
-
-                if (taskToDelete.parentId === 'root') {
-                    alert('Корневую задачу проекта нельзя удалить');
-                    return project;
-                }
-
-                let updatedTasks = removeTaskAndProcessChildren(taskId, project.tasks, removeChildren);
-
-                if (typeof taskToDelete.parentId === 'number') {
-                    updatedTasks = updateParentCompletion(taskToDelete.parentId, updatedTasks);
-                }
-
-                return { ...project, tasks: updatedTasks };
-            }
-            return project;
-        }));
-    };
-
-    const toggleTaskCompletion = (projectId: number, taskId: number) => {
-        setProjects(prev => prev.map(project => {
-            if (project.id === projectId) {
-                const task = project.tasks.find(t => t.id === taskId);
-                if (!task) return project;
-
-                if (!task.isCompleted && !areAllChildrenCompleted(taskId, project.tasks)) {
-                    alert('Нельзя отметить задачу как выполненную, пока не выполнены все подзадачи');
-                    return project;
-                }
-
-                const updatedTasks = project.tasks.map(t =>
-                    t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t
-                );
-
-                const finalTasks = updateParentCompletion(taskId, updatedTasks);
-
-                return { ...project, tasks: finalTasks };
-            }
-            return project;
-        }));
-    };
-
-    const addParticipantToProject = (projectId: number, participantName: string) => {
-        setProjects(prev => prev.map(project =>
-            project.id === projectId
-                ? { ...project, participants: [...project.participants, participantName] }
-                : project
-        ));
-    };
-
-    const removeParticipantFromProject = (projectId: number, participantName: string) => {
-        setProjects(prev => prev.map(project =>
-            project.id === projectId
-                ? {
-                    ...project,
-                    participants: project.participants.filter(p => p !== participantName)
-                }
-                : project
-        ));
-    };
-
-    const getAvailableParentsForTask = (projectId: number, taskId: number) => {
+    const getAvailableParentsForTask = (projectId: string, taskId: string) => {
         const project = projects.find(p => p.id === projectId);
         if (!project) return [];
 
-        return getAvailableParents(taskId, project.tasks);
+        const flatTasks = flattenTasks(project.tasks);
+        return getAvailableParents(taskId, flatTasks);
     };
 
-    const canSetTaskParent = (projectId: number, taskId: number, newParentId: number | 'root' | null) => {
+    const canSetTaskParent = (projectId: string, taskId: string, newParentId: string | null) => {
         const project = projects.find(p => p.id === projectId);
         if (!project) return false;
 
-        return canSetParent(taskId, newParentId, project.tasks);
+        const flatTasks = flattenTasks(project.tasks);
+        return canSetParent(taskId, newParentId, flatTasks);
     };
 
     return {
         projects,
+        loading,
+        error,
         createProject,
         deleteProject,
         updateProject,
         addTaskToProject,
         updateTaskInProject,
-        updateTaskWithParentChange,
         deleteTaskFromProject,
         toggleTaskCompletion,
-        addParticipantToProject,
-        removeParticipantFromProject,
         getAvailableParentsForTask,
-        canSetTaskParent
+        canSetTaskParent,
+        refreshProject
     };
 };

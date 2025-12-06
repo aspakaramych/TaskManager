@@ -1,21 +1,19 @@
-import { Project, User } from '../../types';
+import { ProjectInfoDto, User } from '../../types';
 
 interface RightSidebarProps {
-  selectedProject: Project | null;
+  selectedProject: ProjectInfoDto | null;
   showAddParticipant: boolean;
-  allUsers: User[];
   onAddParticipant: (userName: string) => void;
   onShowAddParticipant: (show: boolean) => void;
   onRemoveParticipant: (participantName: string) => void;
   isProjectCreator: boolean;
-  onDeleteProject: (projectId: number) => void;
+  onDeleteProject: (projectId: string) => void;
   currentUser: User | null;
 }
 
 export const RightSidebar = ({
   selectedProject,
   showAddParticipant,
-  allUsers,
   onAddParticipant,
   onShowAddParticipant,
   onRemoveParticipant,
@@ -29,13 +27,13 @@ export const RightSidebar = ({
       <div className="participants-section">
         {isProjectCreator && (
           <>
-            <button 
+            <button
               className="add-participant-btn"
               onClick={() => onShowAddParticipant(true)}
             >
               Добавить участника
             </button>
-            <button 
+            <button
               className="delete-project-btn"
               onClick={() => onDeleteProject(selectedProject.id)}
             >
@@ -45,25 +43,9 @@ export const RightSidebar = ({
         )}
         {showAddParticipant && (
           <div className="add-participant-modal">
-            <h4>Выберите пользователя:</h4>
-            <div className="users-list">
-              {allUsers
-                .filter(user => 
-                  !selectedProject.participants.includes(user.name) && 
-                  user.name !== currentUser?.name
-                )
-                .map(user => (
-                  <div
-                    key={user.id}
-                    className="user-item"
-                    onClick={() => onAddParticipant(user.name)}
-                  >
-                    {user.name}
-                  </div>
-                ))
-              }
-            </div>
-            <button 
+            <h4>Добавить участника:</h4>
+            <p>Функция добавления участников будет реализована позже</p>
+            <button
               className="close-modal-btn"
               onClick={() => onShowAddParticipant(false)}
             >
@@ -72,16 +54,17 @@ export const RightSidebar = ({
           </div>
         )}
         <div className="participants-list">
-          {selectedProject.participants.map((participant, index) => (
-            <div key={index} className="participant-item">
-              <span className={participant === selectedProject.creator ? 'creator' : ''}>
-                {participant}
-                {participant === selectedProject.creator && ' (Создатель)'}
+          {selectedProject.team.users.map((user) => (
+            <div key={user.id} className="participant-item">
+              <span className={user.role === 'Creator' ? 'creator' : ''}>
+                {user.username}
+                {user.role === 'Creator' && ' (Создатель)'}
+                {user.role && user.role !== 'Creator' && ` (${user.role})`}
               </span>
-              {isProjectCreator && participant !== selectedProject.creator && (
-                <button 
+              {isProjectCreator && user.role !== 'Creator' && (
+                <button
                   className="remove-participant-btn"
-                  onClick={() => onRemoveParticipant(participant)}
+                  onClick={() => onRemoveParticipant(user.username)}
                   title="Удалить участника"
                 >
                   ×
@@ -92,7 +75,7 @@ export const RightSidebar = ({
         </div>
       </div>
     ) : (
-      <div className="no-participants">Участники не выбраны</div>
+      <div className="no-participants">Выберите проект</div>
     )}
   </div>
 );

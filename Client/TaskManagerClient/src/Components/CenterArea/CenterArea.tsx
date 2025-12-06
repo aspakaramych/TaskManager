@@ -1,24 +1,24 @@
-import type { Project, Task, User, NewTaskData } from '../../types';
+import type { ProjectInfoDto, TaskResponse, User, NewTaskData } from '../../types';
 import { CreateTaskModal, EditTaskModal, ViewTaskModal } from '../TaskModals/TaskModals';
 import { MultiTreeGraph } from '../TreeGraph/MultiTreeGraph';
-import { areAllChildrenCompleted } from '../../utils/taskTreeUtils';
+import { areAllChildrenCompleted, flattenTasks } from '../../utils/taskTreeUtils';
 
 interface CenterAreaProps {
-  selectedProject: Project | null;
+  selectedProject: ProjectInfoDto | null;
   showCreateTask: boolean;
   newTask: NewTaskData;
   onNewTaskChange: (task: NewTaskData) => void;
   onCreateTask: () => void;
   onCancelCreateTask: () => void;
-  editingTask: Task | null;
-  onEditingTaskChange: (task: Task) => void;
+  editingTask: TaskResponse | null;
+  onEditingTaskChange: (task: TaskResponse) => void;
   onUpdateTask: () => void;
-  onDeleteTask: (taskId: number, removeChildren: boolean) => void;
+  onDeleteTask: (taskId: string, removeChildren: boolean) => void;
   onCancelEditTask: () => void;
-  onToggleTaskCompletion: (taskId: number) => void;
+  onToggleTaskCompletion: (taskId: string) => void;
   isProjectCreator: boolean;
   currentUser: User | null;
-  availableParents: Task[];
+  availableParents: TaskResponse[];
   isRootTask: boolean;
 }
 
@@ -40,10 +40,11 @@ export const CenterArea = ({
   availableParents,
   isRootTask
 }: CenterAreaProps) => {
-  
-  const checkAllChildrenCompleted = (task: Task): boolean => {
+
+  const checkAllChildrenCompleted = (task: TaskResponse): boolean => {
     if (!selectedProject) return true;
-    return areAllChildrenCompleted(task.id, selectedProject.tasks);
+    const flatTasks = flattenTasks(selectedProject.tasks);
+    return areAllChildrenCompleted(task.id, flatTasks);
   };
 
   return (
@@ -58,7 +59,7 @@ export const CenterArea = ({
                 onUpdate={onUpdateTask}
                 onDelete={onDeleteTask}
                 onCancel={onCancelEditTask}
-                participants={selectedProject.participants}
+                teamUsers={selectedProject.team.users}
                 onToggleCompletion={() => onToggleTaskCompletion(editingTask.id)}
                 availableParents={availableParents}
                 isRootTask={isRootTask}
@@ -69,8 +70,8 @@ export const CenterArea = ({
                 task={editingTask}
                 onCancel={onCancelEditTask}
                 onToggleCompletion={
-                  currentUser && editingTask.assignee === currentUser.name 
-                    ? () => onToggleTaskCompletion(editingTask.id) 
+                  currentUser && editingTask.assigneeId === currentUser.username
+                    ? () => onToggleTaskCompletion(editingTask.id)
                     : undefined
                 }
                 currentUser={currentUser}
@@ -84,7 +85,7 @@ export const CenterArea = ({
               onNewTaskChange={onNewTaskChange}
               onCreateTask={onCreateTask}
               onCancel={onCancelCreateTask}
-              participants={selectedProject.participants}
+              teamUsers={selectedProject.team.users}
               availableParents={availableParents}
             />
           ) : (
