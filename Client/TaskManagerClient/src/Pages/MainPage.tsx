@@ -6,100 +6,84 @@ import { CreateProjectModal } from '../Components/Modals/CreateProjectModal';
 import { LeftSidebar } from '../Components/Sidebars/LeftSidebar';
 import { RightSidebar } from '../Components/Sidebars/RightSidebar';
 import { CenterArea } from '../Components/CenterArea/CenterArea';
-import type { NewProjectData, NewTaskData, Task, Project, User } from '../types';
+import type { NewProjectData, NewTaskData, TaskResponse, ProjectInfoDto, User } from '../types';
 import './MainPage.css';
-import { apiCreateProject } from "../Components/Api/mainApi.ts";
+import { flattenTasks } from '../utils/taskTreeUtils';
 
 const MainPage = () => {
     const {
         projects,
+        loading: projectsLoading,
+        createProject,
         deleteProject,
         addTaskToProject,
         updateTaskInProject,
-        updateTaskWithParentChange,
         deleteTaskFromProject,
         toggleTaskCompletion,
-        addParticipantToProject,
-        removeParticipantFromProject,
         getAvailableParentsForTask,
-        canSetTaskParent,
-        createProject
+        canSetTaskParent
     } = useProjects();
+
     const {
         currentUser,
         logout,
-        loading,
+        loading: authLoading,
         isAuthenticated,
     } = useAuth();
 
-    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [selectedProject, setSelectedProject] = useState<ProjectInfoDto | null>(null);
     const [showCreateProject, setShowCreateProject] = useState(false);
-    const [newProject, setNewProject] = useState<NewProjectData>({
-        title: '',
-        description: '',
-        participants: []
-    });
+    const [newProject, setNewProject] = useState<NewProjectData>({ title: '', description: '' });
     const [showAddParticipant, setShowAddParticipant] = useState(false);
     const [showCreateTask, setShowCreateTask] = useState(false);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [editingTask, setEditingTask] = useState<TaskResponse | null>(null);
     const [newTask, setNewTask] = useState<NewTaskData>({
         title: '',
-        dueDate: '',
-        assignee: '',
-        parentId: null
+        deadline: new Date(),
+        assigneeId: null,
+        taskHeadId: null
     });
-    const [allUsers] = useState<User[]>([]); // Убрали setAllUsers, так как не используется
+    const [showLogin, setShowLogin] = useState(false);
 
-    // Эффект для проверки аутентификации после загрузки
+    // Check authentication after loading
     useEffect(() => {
-        if (!loading && !isAuthenticated) {
-            // Перенаправление на страницу логина или отображение модального окна
-            console.log('Пользователь не аутентифицирован');
+        if (!authLoading && !isAuthenticated) {
+            setShowLogin(true);
         }
-    }, [loading, isAuthenticated]);
 
-    // Эффект для синхронизации выбранного проекта и задачи
+        if (isAuthenticated) {
+            setShowLogin(false);
+        }
+    }, [authLoading, isAuthenticated]);
+
+    // Sync selected project and task
     useEffect(() => {
         if (selectedProject) {
             const updatedProject = projects.find(p => p.id === selectedProject.id);
             if (updatedProject && updatedProject !== selectedProject) {
-                // Используем setTimeout для избежания синхронного вызова setState
-                const timer = setTimeout(() => {
+                requestAnimationFrame(() => {
                     setSelectedProject(updatedProject);
 
                     if (editingTask) {
-                        const updatedTask = updatedProject.tasks.find(t => t.id === editingTask.id);
+                        const flatTasks = flattenTasks(updatedProject.tasks);
+                        const updatedTask = flatTasks.find(t => t.id === editingTask.id);
                         if (updatedTask && updatedTask !== editingTask) {
                             setEditingTask(updatedTask);
                         }
                     }
-                }, 0);
-                return () => clearTimeout(timer);
+                });
             }
         }
     }, [projects, selectedProject, editingTask]);
 
-    // Обработчики
     const handleCreateProject = async () => {
         if (newProject.title.trim() && currentUser) {
             try {
-                // Создаем проект через API (только 2 аргумента)
-                await apiCreateProject(newProject.title, newProject.description);
-
-                // Также создаем локально для немедленного отображения
-                const createdProject = createProject(newProject, currentUser.username);
-
-                setNewProject({
-                    title: '',
-                    description: '',
-                    participants: []
-                });
+                await createProject(newProject);
+                setNewProject({ title: '', description: '' });
                 setShowCreateProject(false);
-
-                // Автоматически выбираем созданный проект
-                setSelectedProject(createdProject);
-            } catch (error) {
-                console.error('Ошибка при создании проекта:', error);
+            } catch (err) {
+                console.error('Failed to create project:', err);
                 alert('Не удалось создать проект');
             }
         }
@@ -107,81 +91,58 @@ const MainPage = () => {
 
     const handleAddParticipant = (userName: string) => {
         if (selectedProject) {
-            addParticipantToProject(selectedProject.id, userName);
+            // TODO: Implement API call for adding participant
             setShowAddParticipant(false);
         }
     };
 
     const handleRemoveParticipant = (participantName: string) => {
-        if (selectedProject && participantName !== selectedProject.creator) {
-            removeParticipantFromProject(selectedProject.id, participantName);
+        if (selectedProject) {
+            // TODO: Implement API call for removing participant
         }
     };
 
-    const handleCreateTask = () => {
+    const handleCreateTask = async () => {
         if (newTask.title.trim() && selectedProject) {
-            if (newTask.parentId && newTask.parentId !== 'root' &&
-                !canSetTaskParent(selectedProject.id, -1, newTask.parentId)) {
-                alert('Невозможно установить выбранного родителя (обнаружен цикл)');
-                return;
+            try {
+                await addTaskToProject(selectedProject.id, newTask);
+                setNewTask({
+                    title: '',
+                    deadline: new Date(),
+                    assigneeId: null,
+                    taskHeadId: null
+                });
+                setShowCreateTask(false);
+            } catch (err) {
+                console.error('Failed to create task:', err);
+                alert('Не удалось создать задачу');
             }
-
-            addTaskToProject(selectedProject.id, newTask);
-            setNewTask({
-                title: '',
-                dueDate: '',
-                assignee: '',
-                parentId: null
-            });
-            setShowCreateTask(false);
         }
     };
 
     const handleUpdateTask = () => {
         if (editingTask && selectedProject) {
-            const oldTask = selectedProject.tasks.find(t => t.id === editingTask.id);
-            if (!oldTask) return;
-
-            const oldParentId = oldTask.parentId;
-            const newParentId = editingTask.parentId;
-
-            if (editingTask.parentId && editingTask.parentId !== 'root' &&
-                !canSetTaskParent(selectedProject.id, editingTask.id, editingTask.parentId)) {
-                alert('Невозможно установить выбранного родителя (обнаружен цикл)');
-                return;
-            }
-
-            if (oldParentId !== newParentId) {
-                updateTaskWithParentChange(
-                    selectedProject.id,
-                    editingTask.id,
-                    editingTask,
-                    oldParentId,
-                    newParentId
-                );
-            } else {
-                updateTaskInProject(selectedProject.id, editingTask.id, editingTask);
-            }
-
+            updateTaskInProject(selectedProject.id, editingTask.id, editingTask);
             setEditingTask(null);
         }
     };
 
-    const handleDeleteTask = (taskId: number, removeChildren: boolean) => {
+    const handleDeleteTask = (taskId: string, removeChildren: boolean) => {
         if (selectedProject) {
             deleteTaskFromProject(selectedProject.id, taskId, removeChildren);
             setEditingTask(null);
         }
     };
 
-    const handleToggleTaskCompletion = (taskId: number) => {
+    const handleToggleTaskCompletion = (taskId: string) => {
         if (selectedProject) {
             toggleTaskCompletion(selectedProject.id, taskId);
 
             if (editingTask && editingTask.id === taskId) {
                 const updatedProject = projects.find(p => p.id === selectedProject.id);
                 if (updatedProject) {
-                    const updatedTask = updatedProject.tasks.find(t => t.id === taskId);
+                    const flatTasks = flattenTasks(updatedProject.tasks);
+                    const updatedTask = flatTasks.find(t => t.id === taskId);
                     if (updatedTask) {
                         setEditingTask(updatedTask);
                     }
@@ -190,7 +151,7 @@ const MainPage = () => {
         }
     };
 
-    const handleDeleteProject = (projectId: number) => {
+    const handleDeleteProject = (projectId: string) => {
         if (window.confirm('Вы уверены, что хотите удалить этот проект? Все задачи будут удалены.')) {
             deleteProject(projectId);
             if (selectedProject && selectedProject.id === projectId) {
@@ -212,31 +173,23 @@ const MainPage = () => {
         if (editingTask) {
             return getAvailableParentsForTask(selectedProject.id, editingTask.id);
         } else {
-            return selectedProject.tasks;
+            return flattenTasks(selectedProject.tasks);
         }
     };
 
-    const isRootTask = (task: Task | null) => {
-        return task?.parentId === 'root';
+    const isRootTask = (task: TaskResponse | null) => {
+        return task?.taskHeadId === null;
     };
 
+    // Check if current user is project creator
     const isProjectCreator = selectedProject && currentUser &&
-        selectedProject.creator === currentUser.username;
+        selectedProject.team.users.some(u => u.id === currentUser.username && u.role === 'Creator');
 
-    // Отображение состояния загрузки
-    if (loading) {
+    // Show loading screen
+    if (authLoading || projectsLoading) {
         return (
             <div className="main-page loading-screen">
                 <div className="loading-spinner">Загрузка данных...</div>
-            </div>
-        );
-    }
-
-    // Если пользователь не аутентифицирован, показываем только загрузку
-    if (!isAuthenticated) {
-        return (
-            <div className="main-page loading-screen">
-                <div className="loading-spinner">Перенаправление на страницу авторизации...</div>
             </div>
         );
     }
@@ -252,7 +205,7 @@ const MainPage = () => {
                     <LeftSidebar
                         projects={projects}
                         selectedProject={selectedProject}
-                        onProjectSelect={(project: Project) => {
+                        onProjectSelect={(project: ProjectInfoDto) => {
                             setSelectedProject(project);
                             setEditingTask(null);
                             setShowCreateTask(false);
@@ -298,7 +251,6 @@ const MainPage = () => {
                         isProjectCreator={isProjectCreator}
                         onDeleteProject={handleDeleteProject}
                         currentUser={currentUser}
-                        allUsers={allUsers}
                     />
                 </div>
             </div>

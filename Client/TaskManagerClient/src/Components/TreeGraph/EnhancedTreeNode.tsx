@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Task } from '../../types';
+import { TaskResponse, TaskProgress } from '../../types';
+import { formatDeadline } from '../../utils/taskTreeUtils';
 
 interface EnhancedTreeNodeProps {
-  task: Task;
-  onTaskClick: (task: Task) => void;
+  task: TaskResponse;
+  onTaskClick: (task: TaskResponse) => void;
   onToggle?: () => void;
   isOpen?: boolean;
   hasChildren?: boolean;
@@ -32,39 +33,47 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
     if (onToggle) onToggle();
   };
 
+  const isDone = task.progress === TaskProgress.Done;
+
   const getNodeStyles = () => {
     const baseStyles = {
-      background: isCompleted ? '#e8f5e8' : '#ffffff',
-      borderColor: isCompleted ? '#2ed573' : isRootLevel ? '#ffa502' : '#3742fa',
-      color: isCompleted ? '#2d3748' : '#2d3748'
+      background: isDone ? '#e8f5e8' : '#ffffff',
+      borderColor: isDone ? '#2ed573' : isRootLevel ? '#ffa502' : '#3742fa',
+      color: isDone ? '#2d3748' : '#2d3748'
     };
 
     if (isHovered) {
-      baseStyles.background = isCompleted ? '#d4edda' : '#f8f9fa';
+      baseStyles.background = isDone ? '#d4edda' : '#f8f9fa';
     }
 
     return baseStyles;
   };
 
   const getStatusStyles = () => {
-    if (isCompleted) {
+    if (isDone) {
       return { background: '#2ed573', color: 'white' };
+    }
+    if (task.progress === TaskProgress.Taken) {
+      return { background: '#3742fa', color: 'white' };
+    }
+    if (task.progress === TaskProgress.Canceled) {
+      return { background: '#ff4757', color: 'white' };
     }
     return { background: '#ffa502', color: 'white' };
   };
 
   const getPriorityStyles = () => {
-    if (!task.dueDate) return { background: '#95a5a6', color: 'white' };
-    
-    const dueDate = new Date(task.dueDate);
+    if (!task.deadline) return { background: '#95a5a6', color: 'white' };
+
+    const dueDate = new Date(task.deadline);
     const today = new Date();
     const diffTime = dueDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return { background: '#ff4757', color: 'white' }; // Просрочено
     if (diffDays <= 3) return { background: '#ffa502', color: 'white' }; // Срочно
     if (diffDays <= 7) return { background: '#3742fa', color: 'white' }; // Скоро срок
-    
+
     return { background: '#2ed573', color: 'white' }; // Есть время
   };
 
@@ -73,8 +82,8 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
   const priorityStyles = getPriorityStyles();
 
   return (
-    <div 
-      className={`enhanced-tree-node ${isCompleted ? 'completed' : ''} ${isRootLevel ? 'root-level' : ''}`}
+    <div
+      className={`enhanced-tree-node ${isDone ? 'completed' : ''} ${isRootLevel ? 'root-level' : ''}`}
       style={styles}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -87,7 +96,7 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
             {task.title.length > 30 ? task.title.substring(0, 30) + '...' : task.title}
           </h4>
           {hasChildren && (
-            <button 
+            <button
               className="toggle-btn"
               onClick={handleToggleClick}
               title={isOpen ? 'Свернуть подзадачи' : 'Развернуть подзадачи'}
@@ -97,35 +106,38 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
           )}
         </div>
         <div className="status-badge" style={statusStyles}>
-          {isCompleted ? '✅ Выполнено' : '⏳ В работе'}
+          {isDone ? '✅ Выполнено' :
+            task.progress === TaskProgress.Taken ? '⏳ В работе' :
+              task.progress === TaskProgress.Canceled ? '❌ Отменено' :
+                '📝 Создано'}
         </div>
       </div>
 
       {/* Детали задачи */}
       <div className="node-details">
-        {task.assignee && (
+        {task.assigneeName && (
           <div className="detail-item assignee">
             <span className="icon">👤</span>
-            <span className="text" title={task.assignee}>
-              {task.assignee.length > 15 ? task.assignee.substring(0, 15) + '...' : task.assignee}
+            <span className="text" title={task.assigneeName}>
+              {task.assigneeName.length > 15 ? task.assigneeName.substring(0, 15) + '...' : task.assigneeName}
             </span>
           </div>
         )}
-        
-        {task.dueDate && (
+
+        {task.deadline && (
           <div className="detail-item due-date">
             <span className="icon">📅</span>
             <span className="text">
-              {new Date(task.dueDate).toLocaleDateString('ru-RU')}
+              {new Date(task.deadline).toLocaleDateString('ru-RU')}
             </span>
           </div>
         )}
-        
-        {task.childrenIds && task.childrenIds.length > 0 && (
+
+        {task.children && task.children.length > 0 && (
           <div className="detail-item children-count">
             <span className="icon">📂</span>
             <span className="text">
-              {task.childrenIds.length} подзадач
+              {task.children.length} подзадач
             </span>
           </div>
         )}
@@ -134,11 +146,11 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
       {/* Приоритет и дополнительные индикаторы */}
       <div className="node-footer">
         <div className="priority-indicator" style={priorityStyles}>
-          {!task.dueDate ? 'Без срока' : 
-           new Date(task.dueDate) < new Date() ? 'Просрочено' :
-           'В сроке'}
+          {!task.deadline ? 'Без срока' :
+            new Date(task.deadline) < new Date() ? 'Просрочено' :
+              'В сроке'}
         </div>
-        
+
         {task.description && task.description !== 'Описание задачи' && (
           <div className="description-hint" title={task.description}>
             📝

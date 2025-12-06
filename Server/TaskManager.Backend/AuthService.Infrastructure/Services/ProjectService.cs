@@ -12,18 +12,22 @@ public class ProjectService : IProjectService
     private readonly IProjectRepository _projectRepository;
     private readonly ITeamRoleRepository _teamRoleRepository;
     private readonly ITeamRepository _teamRepository;
+    private readonly ITaskService _taskService;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<ProjectService> _logger;
 
     public ProjectService(
         IProjectRepository projectRepository, 
         ITeamRoleRepository teamRoleRepository,
         ITeamRepository teamRepository,
-        ILogger<ProjectService> logger) 
+        ILogger<ProjectService> logger, ITaskService taskService, IUserRepository userRepository) 
     {
         _projectRepository = projectRepository;
         _teamRoleRepository = teamRoleRepository;
         _teamRepository = teamRepository;
         _logger = logger;
+        _taskService = taskService;
+        _userRepository = userRepository;
     }
     
     public async Task<ICollection<ProjectGetDto>> GetProjects(Guid userId)
@@ -123,5 +127,37 @@ public class ProjectService : IProjectService
         if (role != "ProjectManager")
             throw new UnauthorizedAccessException("Only ProjectManager can delete the project.");
         await _projectRepository.DeleteAsync(project);
+    }
+
+    public async Task<ProjectInfoDto> GetProjectInfo(Guid projectId)
+    {
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        var tasks = await _taskService.GetTasks(projectId);
+        var team = await _teamRepository.GetWithRolesAsync(project.TeamId);
+        var users = new List<UserInTeamDto>();
+        foreach (var tr in team.TeamRoles)
+        {
+            var user = await _userRepository.GetByIdAsync(tr.UserId);
+            users.Add(new UserInTeamDto
+            {
+                Id = tr.UserId,
+                Username = user.Username,
+                Role = tr.Role.ToString(),
+            });
+        }
+
+        return new ProjectInfoDto
+        {
+            Id = project.Id,
+            Title = project.Title,
+            Description = project.Description,
+            Tasks = tasks,
+            Team = new TeamResponse
+            {
+                Id = project.TeamId,
+                TeamName = team.Title,
+                Users = users
+            }
+        };
     }
 }

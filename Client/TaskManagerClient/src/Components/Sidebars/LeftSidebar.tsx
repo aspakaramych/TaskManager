@@ -1,44 +1,47 @@
-import { Project, Task, User } from '../../types';
+import { ProjectInfoDto, TaskResponse, User, TaskProgress } from '../../types';
 import './LeftSidebar.css';
+import { formatDeadline } from '../../utils/taskTreeUtils';
 
 interface LeftSidebarProps {
-  projects: Project[];
-  selectedProject: Project | null;
-  onProjectSelect: (project: Project) => void;
+  projects: ProjectInfoDto[];
+  selectedProject: ProjectInfoDto | null;
+  onProjectSelect: (project: ProjectInfoDto) => void;
   onBack: () => void;
   onShowCreateProject: () => void;
-  onTaskClick: (task: Task) => void;
+  onTaskClick: (task: TaskResponse) => void;
   onCreateTask: () => void;
   isProjectCreator: boolean;
   currentUser: User | null;
 }
 
-const TaskItem = ({ 
-  task, 
-  allTasks, 
+const TaskItem = ({
+  task,
   onTaskClick,
-  depth = 0 
-}: { 
-  task: Task; 
-  allTasks: Task[]; 
-  onTaskClick: (task: Task) => void;
+  depth = 0
+}: {
+  task: TaskResponse;
+  onTaskClick: (task: TaskResponse) => void;
   depth: number;
 }) => {
-  const children = allTasks.filter(t => t.parentId === task.id);
-  
+  const children = task.children || [];
+  const isDone = task.progress === TaskProgress.Done;
+
   return (
     <>
-      <div 
-        className={`task-item ${task.isCompleted ? 'completed' : ''} ${children.length > 0 ? 'has-children' : ''}`}
+      <div
+        className={`task-item ${isDone ? 'completed' : ''} ${children.length > 0 ? 'has-children' : ''}`}
         style={{ marginLeft: `${depth * 20}px` }}
         onClick={() => onTaskClick(task)}
       >
         <div className="task-item-content">
           <strong>{task.title}</strong>
-          {task.dueDate && <div>Срок: {task.dueDate}</div>}
-          {task.assignee && <div>Ответственный: {task.assignee}</div>}
+          {task.deadline && <div>Срок: {formatDeadline(task.deadline)}</div>}
+          {task.assigneeName && <div>Ответственный: {task.assigneeName}</div>}
           <div className="task-status">
-            {task.isCompleted ? '✅ Выполнено' : '⏳ В работе'}
+            {isDone ? '✅ Выполнено' :
+              task.progress === TaskProgress.Taken ? '⏳ В работе' :
+                task.progress === TaskProgress.Canceled ? '❌ Отменено' :
+                  '📝 Создано'}
           </div>
           {children.length > 0 && (
             <div className="children-count">
@@ -51,7 +54,6 @@ const TaskItem = ({
         <TaskItem
           key={child.id}
           task={child}
-          allTasks={allTasks}
           onTaskClick={onTaskClick}
           depth={depth + 1}
         />
@@ -71,9 +73,7 @@ export const LeftSidebar = ({
   isProjectCreator,
   currentUser
 }: LeftSidebarProps) => {
-  const rootLevelTasks = selectedProject?.tasks.filter(t => 
-    t.parentId === null || t.parentId === 'root'
-  ) || [];
+  const rootLevelTasks = selectedProject?.tasks || [];
 
   return (
     <div className="left-sidebar">
@@ -94,7 +94,6 @@ export const LeftSidebar = ({
                 <TaskItem
                   key={task.id}
                   task={task}
-                  allTasks={selectedProject.tasks}
                   onTaskClick={onTaskClick}
                   depth={0}
                 />
@@ -122,7 +121,7 @@ export const LeftSidebar = ({
                     onClick={() => onProjectSelect(project)}
                   >
                     {project.title}
-                    {project.creator === currentUser.username && (
+                    {project.team.users.some(u => u.id === currentUser.username && u.role === 'Creator') && (
                       <span className="creator-badge">Создатель</span>
                     )}
                   </div>

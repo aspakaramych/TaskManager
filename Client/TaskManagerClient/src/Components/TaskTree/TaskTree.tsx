@@ -1,50 +1,52 @@
-import { Task } from '../../types';
+import { TaskResponse, TaskProgress } from '../../types';
 import './TaskTree.css';
 
 interface TaskTreeProps {
-  tasks: Task[];
-  onTaskClick: (task: Task) => void;
+  tasks: TaskResponse[];
+  onTaskClick: (task: TaskResponse) => void;
   currentUser: string | null;
   isProjectCreator: boolean;
 }
 
 interface TreeNodeProps {
-  task: Task;
-  tasks: Task[];
-  onTaskClick: (task: Task) => void;
+  task: TaskResponse;
+  onTaskClick: (task: TaskResponse) => void;
   currentUser: string | null;
   isProjectCreator: boolean;
   depth: number;
 }
 
-const TreeNode = ({ 
-  task, 
-  tasks, 
-  onTaskClick, 
-  currentUser, 
-  isProjectCreator, 
-  depth 
+const TreeNode = ({
+  task,
+  onTaskClick,
+  currentUser,
+  isProjectCreator,
+  depth
 }: TreeNodeProps) => {
-  const children = tasks.filter(t => t.parentId === task.id);
+  const children = task.children || [];
   const hasChildren = children.length > 0;
+  const isDone = task.progress === TaskProgress.Done;
 
   return (
     <div className="tree-node">
-      <div 
-        className={`task-node ${task.isCompleted ? 'completed' : ''} ${hasChildren ? 'has-children' : ''}`}
+      <div
+        className={`task-node ${isDone ? 'completed' : ''} ${hasChildren ? 'has-children' : ''}`}
         style={{ marginLeft: `${depth * 25}px` }}
         onClick={() => onTaskClick(task)}
       >
         <div className="task-node-content">
           <div className="task-node-main">
             <div className="task-status-indicator">
-              {task.isCompleted ? '✅' : '⏳'}
+              {isDone ? '✅' :
+                task.progress === TaskProgress.Taken ? '⏳' :
+                  task.progress === TaskProgress.Canceled ? '❌' :
+                    '📝'}
             </div>
             <div className="task-info">
               <div className="task-title">{task.title}</div>
               <div className="task-meta">
-                {task.assignee && <span className="assignee">👤 {task.assignee}</span>}
-                {task.dueDate && <span className="due-date">📅 {task.dueDate}</span>}
+                {task.assigneeName && <span className="assignee">👤 {task.assigneeName}</span>}
+                {task.deadline && <span className="due-date">📅 {new Date(task.deadline).toLocaleDateString('ru-RU')}</span>}
               </div>
             </div>
           </div>
@@ -62,7 +64,6 @@ const TreeNode = ({
             <TreeNode
               key={child.id}
               task={child}
-              tasks={tasks}
               onTaskClick={onTaskClick}
               currentUser={currentUser}
               isProjectCreator={isProjectCreator}
@@ -76,9 +77,7 @@ const TreeNode = ({
 };
 
 export const TaskTree = ({ tasks, onTaskClick, currentUser, isProjectCreator }: TaskTreeProps) => {
-  const rootTasks = tasks.filter(task =>
-    task.parentId === null || task.parentId === 'root'
-  );
+  const rootTasks = tasks;
 
   if (rootTasks.length === 0) {
     return (
@@ -89,13 +88,28 @@ export const TaskTree = ({ tasks, onTaskClick, currentUser, isProjectCreator }: 
     );
   }
 
+  const flattenTasks = (tasks: TaskResponse[]): TaskResponse[] => {
+    const result: TaskResponse[] = [];
+    const flatten = (task: TaskResponse) => {
+      result.push(task);
+      if (task.children && task.children.length > 0) {
+        task.children.forEach(child => flatten(child));
+      }
+    };
+    tasks.forEach(task => flatten(task));
+    return result;
+  };
+
+  const allTasks = flattenTasks(tasks);
+  const completedCount = allTasks.filter(t => t.progress === TaskProgress.Done).length;
+
   return (
     <div className="task-tree">
       <div className="tree-header">
         <h3>Дерево задач проекта</h3>
         <div className="tree-stats">
-          <span>Всего задач: {tasks.length}</span>
-          <span>Выполнено: {tasks.filter(t => t.isCompleted).length}</span>
+          <span>Всего задач: {allTasks.length}</span>
+          <span>Выполнено: {completedCount}</span>
         </div>
       </div>
       <div className="tree-container">
@@ -103,7 +117,6 @@ export const TaskTree = ({ tasks, onTaskClick, currentUser, isProjectCreator }: 
           <TreeNode
             key={task.id}
             task={task}
-            tasks={tasks}
             onTaskClick={onTaskClick}
             currentUser={currentUser}
             isProjectCreator={isProjectCreator}

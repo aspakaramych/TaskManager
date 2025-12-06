@@ -1,75 +1,64 @@
 import { Tree } from 'react-arborist';
-import { Task, Project } from '../../types';
+import { TaskResponse, ProjectInfoDto, TaskProgress } from '../../types';
 import './TreeView.css';
 
 interface TreeViewProps {
-  project: Project;
-  onTaskClick: (task: Task) => void;
+  project: ProjectInfoDto;
+  onTaskClick: (task: TaskResponse) => void;
 }
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const projectToTreeData = (project: Project) => {
+const projectToTreeData = (project: ProjectInfoDto) => {
   if (!project || !project.tasks) return [];
-  
-  const rootTask = project.tasks.find(t => t.parentId === 'root');
-  
-  const buildTree = (task: Task) => {
-    const children = project.tasks.filter(t => t.parentId === task.id);
+
+  const buildTree = (task: TaskResponse) => {
+    const children = task.children || [];
     return {
-      id: task.id.toString(),
+      id: task.id,
       name: task.title,
-      isCompleted: task.isCompleted,
-      assignee: task.assignee,
-      dueDate: task.dueDate,
+      isCompleted: task.progress === TaskProgress.Done,
+      assignee: task.assigneeName,
+      deadline: task.deadline,
       originalTask: task,
       children: children.length > 0 ? children.map(buildTree) : undefined
     };
   };
-  
-  const treeFromRoot = rootTask ? [buildTree(rootTask)] : [];
-  
-  const independentTasks = project.tasks
-    .filter(t => t.parentId === null)
-    .map(task => ({
-      id: task.id.toString(),
-      name: task.title,
-      isCompleted: task.isCompleted,
-      assignee: task.assignee,
-      dueDate: task.dueDate,
-      originalTask: task
-    }));
-  
-  return [...treeFromRoot, ...independentTasks];
+
+  return project.tasks.map(buildTree);
 };
 
 function NodeComponent({ node, style, dragHandle }: any) {
-    const task = node.data.originalTask;
+  const task = node.data.originalTask;
+  const isDone = task.progress === TaskProgress.Done;
 
-    return (
-        <div style={style} ref={dragHandle} className="tree-node">
+  return (
+    <div style={style} ref={dragHandle} className="tree-node">
       <span
-          className="toggle-icon"
-          onClick={() => node.toggle()}
-          style={{ marginRight: '8px' }}
+        className="toggle-icon"
+        onClick={() => node.toggle()}
+        style={{ marginRight: '8px' }}
       >
         {node.isInternal ? (node.isOpen ? '▼' : '►') : '•'}
       </span>
-            <span
-                className={`task-title ${task.isCompleted ? 'completed' : ''}`}
-                onClick={() => node.data.onTaskClick?.(task)}
-            >
+      <span
+        className={`task-title ${isDone ? 'completed' : ''}`}
+        onClick={() => node.data.onTaskClick?.(task)}
+      >
         {node.data.name}
       </span>
-            {task.assignee && (
-                <span className="task-assignee"> ({task.assignee})</span>
-            )}
-            {task.dueDate && (
-                <span className="task-due-date"> 📅 {task.dueDate}</span>
-            )}
-            <span className="task-status">
-        {task.isCompleted ? ' ✅' : ' ⏳'}
+      {task.assigneeName && (
+        <span className="task-assignee"> ({task.assigneeName})</span>
+      )}
+      {task.deadline && (
+        <span className="task-due-date"> 📅 {new Date(task.deadline).toLocaleDateString('ru-RU')}</span>
+      )}
+      <span className="task-status">
+        {isDone ? ' ✅' :
+          task.progress === TaskProgress.Taken ? ' ⏳' :
+            task.progress === TaskProgress.Canceled ? ' ❌' :
+              ' 📝'}
       </span>
-        </div>
-    );
+    </div>
+  );
 }
 
 export const TreeView = ({ project, onTaskClick }: TreeViewProps) => {

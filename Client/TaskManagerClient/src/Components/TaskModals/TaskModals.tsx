@@ -1,12 +1,13 @@
-import { Task, User } from '../../types';
+import { TaskResponse, User, NewTaskData, UserInTeamDto, TaskProgress } from '../../types';
+import { formatDeadline } from '../../utils/taskTreeUtils';
 
 interface CreateTaskModalProps {
-  newTask: { title: string; dueDate: string; assignee: string; parentId: number | 'root' | null };
-  onNewTaskChange: (task: { title: string; dueDate: string; assignee: string; parentId: number | 'root' | null }) => void;
+  newTask: NewTaskData;
+  onNewTaskChange: (task: NewTaskData) => void;
   onCreateTask: () => void;
   onCancel: () => void;
-  participants: string[];
-  availableParents: Task[];
+  teamUsers: UserInTeamDto[];
+  availableParents: TaskResponse[];
 }
 
 export const CreateTaskModal = ({
@@ -14,82 +15,90 @@ export const CreateTaskModal = ({
   onNewTaskChange,
   onCreateTask,
   onCancel,
-  participants,
+  teamUsers,
   availableParents
-}: CreateTaskModalProps) => (
-  <div className="task-modal">
-    <h3>Создание новой задачи</h3>
-    <div className="form-group">
-      <label>Название задачи:</label>
-      <input
-        type="text"
-        value={newTask.title}
-        onChange={(e) => onNewTaskChange({ ...newTask, title: e.target.value })}
-        placeholder="Введите название задачи"
-      />
+}: CreateTaskModalProps) => {
+  const formatDateForInput = (date: Date): string => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  return (
+    <div className="task-modal">
+      <h3>Создание новой задачи</h3>
+      <div className="form-group">
+        <label>Название задачи:</label>
+        <input
+          type="text"
+          value={newTask.title}
+          onChange={(e) => onNewTaskChange({ ...newTask, title: e.target.value })}
+          placeholder="Введите название задачи"
+        />
+      </div>
+      <div className="form-group">
+        <label>Срок выполнения:</label>
+        <input
+          type="date"
+          value={formatDateForInput(newTask.deadline)}
+          onChange={(e) => onNewTaskChange({ ...newTask, deadline: new Date(e.target.value) })}
+        />
+      </div>
+      <div className="form-group">
+        <label>Ответственный:</label>
+        <select
+          value={newTask.assigneeId || ''}
+          onChange={(e) => onNewTaskChange({ ...newTask, assigneeId: e.target.value || null })}
+        >
+          <option value="">Выберите ответственного</option>
+          {teamUsers.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.username}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Родительская задача:</label>
+        <select
+          value={newTask.taskHeadId || 'null'}
+          onChange={(e) => {
+            const value = e.target.value;
+            const taskHeadId = value === 'null' ? null : value;
+            onNewTaskChange({ ...newTask, taskHeadId });
+          }}
+        >
+          <option value="null">Нет (самостоятельная задача)</option>
+          {availableParents.map(task => (
+            <option key={task.id} value={task.id}>
+              {task.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="modal-actions">
+        <button className="confirm-btn" onClick={onCreateTask}>
+          Создать
+        </button>
+        <button className="cancel-btn" onClick={onCancel}>
+          Отмена
+        </button>
+      </div>
     </div>
-    <div className="form-group">
-      <label>Срок выполнения:</label>
-      <input
-        type="date"
-        value={newTask.dueDate}
-        onChange={(e) => onNewTaskChange({ ...newTask, dueDate: e.target.value })}
-      />
-    </div>
-    <div className="form-group">
-      <label>Ответственный:</label>
-      <select
-        value={newTask.assignee}
-        onChange={(e) => onNewTaskChange({ ...newTask, assignee: e.target.value })}
-      >
-        <option value="">Выберите ответственного</option>
-        {participants.map((participant, index) => (
-          <option key={index} value={participant}>
-            {participant}
-          </option>
-        ))}
-      </select>
-    </div>
-    <div className="form-group">
-      <label>Родительская задача:</label>
-      <select
-        value={newTask.parentId === null ? 'null' : newTask.parentId}
-        onChange={(e) => {
-          const value = e.target.value;
-          const parentId = value === 'null' ? null : 
-                          value === 'root' ? 'root' : 
-                          parseInt(value);
-          onNewTaskChange({ ...newTask, parentId });
-        }}
-      >
-        <option value="null">Нет (самостоятельная задача)</option>
-        {availableParents.map(task => (
-          <option key={task.id} value={task.id}>
-            {task.title}
-          </option>
-        ))}
-      </select>
-    </div>
-    <div className="modal-actions">
-      <button className="confirm-btn" onClick={onCreateTask}>
-        Создать
-      </button>
-      <button className="cancel-btn" onClick={onCancel}>
-        Отмена
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 interface EditTaskModalProps {
-  task: Task;
-  onTaskChange: (task: Task) => void;
+  task: TaskResponse;
+  onTaskChange: (task: TaskResponse) => void;
   onUpdate: () => void;
-  onDelete: (taskId: number, removeChildren: boolean) => void;
+  onDelete: (taskId: string, removeChildren: boolean) => void;
   onCancel: () => void;
-  participants: string[];
+  teamUsers: UserInTeamDto[];
   onToggleCompletion: () => void;
-  availableParents: Task[];
+  availableParents: TaskResponse[];
   isRootTask: boolean;
   areAllChildrenCompleted?: boolean;
 }
@@ -100,14 +109,14 @@ export const EditTaskModal = ({
   onUpdate,
   onDelete,
   onCancel,
-  participants,
+  teamUsers,
   onToggleCompletion,
   availableParents,
   isRootTask,
   areAllChildrenCompleted = true
 }: EditTaskModalProps) => {
   const handleDelete = () => {
-    if (task.childrenIds.length > 0) {
+    if (task.children && task.children.length > 0) {
       const removeChildren = window.confirm(
         'У этой задачи есть подзадачи. Удалить подзадачи вместе с этой задачей? ' +
         'Если нет, то подзадачи будут перемещены к родителю этой задачи.'
@@ -117,6 +126,16 @@ export const EditTaskModal = ({
       onDelete(task.id, false);
     }
   };
+
+  const formatDateForInput = (date: Date): string => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const isDone = task.progress === TaskProgress.Done;
 
   return (
     <div className="task-modal">
@@ -133,20 +152,20 @@ export const EditTaskModal = ({
         <label>Срок выполнения:</label>
         <input
           type="date"
-          value={task.dueDate}
-          onChange={(e) => onTaskChange({ ...task, dueDate: e.target.value })}
+          value={formatDateForInput(task.deadline)}
+          onChange={(e) => onTaskChange({ ...task, deadline: new Date(e.target.value) })}
         />
       </div>
       <div className="form-group">
         <label>Ответственный:</label>
         <select
-          value={task.assignee}
-          onChange={(e) => onTaskChange({ ...task, assignee: e.target.value })}
+          value={task.assigneeId || ''}
+          onChange={(e) => onTaskChange({ ...task, assigneeId: e.target.value || null })}
         >
           <option value="">Не назначен</option>
-          {participants.map((participant, index) => (
-            <option key={index} value={participant}>
-              {participant}
+          {teamUsers.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.username}
             </option>
           ))}
         </select>
@@ -155,13 +174,11 @@ export const EditTaskModal = ({
         <div className="form-group">
           <label>Родительская задача:</label>
           <select
-            value={task.parentId === null ? 'null' : task.parentId}
+            value={task.taskHeadId || 'null'}
             onChange={(e) => {
               const value = e.target.value;
-              const parentId = value === 'null' ? null : 
-                              value === 'root' ? 'root' : 
-                              parseInt(value);
-              onTaskChange({ ...task, parentId });
+              const taskHeadId = value === 'null' ? null : value;
+              onTaskChange({ ...task, taskHeadId });
             }}
           >
             <option value="null">Нет (самостоятельная задача)</option>
@@ -187,16 +204,16 @@ export const EditTaskModal = ({
         <label className="completion-toggle-label">
           <input
             type="checkbox"
-            checked={task.isCompleted}
+            checked={isDone}
             onChange={onToggleCompletion}
             className="completion-checkbox"
-            disabled={!task.isCompleted && !areAllChildrenCompleted}
+            disabled={!isDone && !areAllChildrenCompleted}
           />
           <span className="completion-text">Задача выполнена?</span>
         </label>
-        {task.childrenIds.length > 0 && (
+        {task.children && task.children.length > 0 && (
           <div className="completion-hint">
-            {task.isCompleted 
+            {isDone
               ? 'Все подзадачи выполнены'
               : 'Для выполнения необходимо завершить все подзадачи'
             }
@@ -206,7 +223,7 @@ export const EditTaskModal = ({
       {!isRootTask && (
         <div className="task-stats">
           <div className="stat-item">
-            Подзадачи: {task.childrenIds.length}
+            Подзадачи: {task.children ? task.children.length : 0}
           </div>
         </div>
       )}
@@ -228,26 +245,27 @@ export const EditTaskModal = ({
 };
 
 interface ViewTaskModalProps {
-    task: Task;
-    onCancel: () => void;
-    onToggleCompletion?: () => void;
-    currentUser: User | null;
-    isRootTask: boolean;
-    areAllChildrenCompleted?: boolean;
+  task: TaskResponse;
+  onCancel: () => void;
+  onToggleCompletion?: () => void;
+  currentUser: User | null;
+  isRootTask: boolean;
+  areAllChildrenCompleted?: boolean;
 }
 
 export const ViewTaskModal = ({
-                                  task,
-                                  onCancel,
-                                  onToggleCompletion,
-                                  currentUser,
-                                  isRootTask,
-                                  areAllChildrenCompleted = true
-                              }: ViewTaskModalProps) => {
-    const canToggleCompletion = currentUser &&
-        (task.assignee === currentUser.username || task.assignee === '');
-  
+  task,
+  onCancel,
+  onToggleCompletion,
+  currentUser,
+  isRootTask,
+  areAllChildrenCompleted = true
+}: ViewTaskModalProps) => {
+  const canToggleCompletion = currentUser &&
+    (task.assigneeId === currentUser.username || !task.assigneeId);
+
   const allChildrenCompleted = areAllChildrenCompleted;
+  const isDone = task.progress === TaskProgress.Done;
 
   return (
     <div className="task-modal">
@@ -259,31 +277,34 @@ export const ViewTaskModal = ({
         </div>
         <div className="detail-row">
           <label>Срок выполнения:</label>
-          <span>{task.dueDate || 'Не установлен'}</span>
+          <span>{task.deadline ? formatDeadline(task.deadline) : 'Не установлен'}</span>
         </div>
         <div className="detail-row">
           <label>Ответственный:</label>
-          <span>{task.assignee || 'Не назначен'}</span>
+          <span>{task.assigneeName || 'Не назначен'}</span>
         </div>
         <div className="detail-row">
           <label>Родительская задача:</label>
           <span>
-            {isRootTask ? 'Корневая задача' : 
-             task.parentId === null ? 'Нет' : 
-             `Задача #${task.parentId}`}
+            {isRootTask ? 'Корневая задача' :
+              task.taskHeadId === null ? 'Нет' :
+                `Задача #${task.taskHeadId}`}
           </span>
         </div>
         <div className="detail-row">
           <label>Подзадачи:</label>
-          <span>{task.childrenIds.length} задач(и)</span>
+          <span>{task.children ? task.children.length : 0} задач(и)</span>
         </div>
         <div className="detail-row">
           <label>Статус:</label>
-          <span className={`status ${task.isCompleted ? 'completed' : 'in-progress'}`}>
-            {task.isCompleted ? '✅ Выполнена' : '⏳ В работе'}
+          <span className={`status ${isDone ? 'completed' : 'in-progress'}`}>
+            {isDone ? '✅ Выполнена' :
+              task.progress === TaskProgress.Taken ? '⏳ В работе' :
+                task.progress === TaskProgress.Canceled ? '❌ Отменено' :
+                  '📝 Создано'}
           </span>
         </div>
-        {task.childrenIds.length > 0 && !task.isCompleted && (
+        {task.children && task.children.length > 0 && !isDone && (
           <div className="detail-row">
             <label>Требования:</label>
             <span className="requirement">
@@ -292,29 +313,29 @@ export const ViewTaskModal = ({
           </div>
         )}
       </div>
-      
+
       {onToggleCompletion && canToggleCompletion && (
         <div className="completion-section">
           <label className="completion-toggle-label">
             <input
               type="checkbox"
-              checked={task.isCompleted}
+              checked={isDone}
               onChange={onToggleCompletion}
               className="completion-checkbox"
-              disabled={!task.isCompleted && !allChildrenCompleted}
+              disabled={!isDone && !allChildrenCompleted}
             />
             <span className="completion-text">
-              {task.isCompleted ? 'Отметить как не выполненную' : 'Отметить как выполненную'}
+              {isDone ? 'Отметить как не выполненную' : 'Отметить как выполненную'}
             </span>
           </label>
-          {!task.isCompleted && !allChildrenCompleted && (
+          {!isDone && !allChildrenCompleted && (
             <div className="completion-warning">
               Нельзя отметить как выполненную: не все подзадачи завершены
             </div>
           )}
         </div>
       )}
-      
+
       <div className="modal-actions">
         <button className="cancel-btn" onClick={onCancel}>
           Закрыть
