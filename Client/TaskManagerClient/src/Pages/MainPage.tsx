@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useProjects } from '../hooks/useProjects';
-import { useAuth } from '../hooks/useAuth'; // Используем новую версию с loading
+import { useAuth } from '../hooks/useAuth';
 import { Header } from '../Components/Header/Header';
 import { CreateProjectModal } from '../Components/Modals/CreateProjectModal';
 import { LeftSidebar } from '../Components/Sidebars/LeftSidebar';
@@ -8,7 +8,7 @@ import { RightSidebar } from '../Components/Sidebars/RightSidebar';
 import { CenterArea } from '../Components/CenterArea/CenterArea';
 import type { NewProjectData, NewTaskData, Task, Project, User } from '../types';
 import './MainPage.css';
-import {apiCreateProject} from "../Components/Api/mainApi.ts";
+import { apiCreateProject } from "../Components/Api/mainApi.ts";
 
 const MainPage = () => {
     const {
@@ -22,7 +22,8 @@ const MainPage = () => {
         addParticipantToProject,
         removeParticipantFromProject,
         getAvailableParentsForTask,
-        canSetTaskParent
+        canSetTaskParent,
+        createProject
     } = useProjects();
     const {
         currentUser,
@@ -33,7 +34,11 @@ const MainPage = () => {
 
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [showCreateProject, setShowCreateProject] = useState(false);
-    const [newProject, setNewProject] = useState<NewProjectData>({ title: '', description: '' });
+    const [newProject, setNewProject] = useState<NewProjectData>({
+        title: '',
+        description: '',
+        participants: []
+    });
     const [showAddParticipant, setShowAddParticipant] = useState(false);
     const [showCreateTask, setShowCreateTask] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -43,21 +48,14 @@ const MainPage = () => {
         assignee: '',
         parentId: null
     });
-    const [showLogin, setShowLogin] = useState(false);
-    const [allUsers, setAllUsers] = useState<User[]>([]);
+    const [allUsers] = useState<User[]>([]); // Убрали setAllUsers, так как не используется
 
-    // 2. ✅ Эффект для проверки аутентификации после загрузки
+    // Эффект для проверки аутентификации после загрузки
     useEffect(() => {
-        // Если загрузка завершена И пользователь не аутентифицирован, показываем модаль логина
         if (!loading && !isAuthenticated) {
-            setShowLogin(true);
+            // Перенаправление на страницу логина или отображение модального окна
+            console.log('Пользователь не аутентифицирован');
         }
-
-        // Если пользователь аутентифицирован, скрываем модаль логина (если он был открыт)
-        if (isAuthenticated) {
-            setShowLogin(false);
-        }
-
     }, [loading, isAuthenticated]);
 
     // Эффект для синхронизации выбранного проекта и задачи
@@ -65,7 +63,8 @@ const MainPage = () => {
         if (selectedProject) {
             const updatedProject = projects.find(p => p.id === selectedProject.id);
             if (updatedProject && updatedProject !== selectedProject) {
-                requestAnimationFrame(() => {
+                // Используем setTimeout для избежания синхронного вызова setState
+                const timer = setTimeout(() => {
                     setSelectedProject(updatedProject);
 
                     if (editingTask) {
@@ -74,17 +73,35 @@ const MainPage = () => {
                             setEditingTask(updatedTask);
                         }
                     }
-                });
+                }, 0);
+                return () => clearTimeout(timer);
             }
         }
     }, [projects, selectedProject, editingTask]);
 
-    // ... (Остальные обработчики остаются без изменений)
+    // Обработчики
     const handleCreateProject = async () => {
         if (newProject.title.trim() && currentUser) {
-            await apiCreateProject(newProject.title, newProject.description);
-            setNewProject({ title: '', description: '' });
-            setShowCreateProject(false);
+            try {
+                // Создаем проект через API (только 2 аргумента)
+                await apiCreateProject(newProject.title, newProject.description);
+
+                // Также создаем локально для немедленного отображения
+                const createdProject = createProject(newProject, currentUser.username);
+
+                setNewProject({
+                    title: '',
+                    description: '',
+                    participants: []
+                });
+                setShowCreateProject(false);
+
+                // Автоматически выбираем созданный проект
+                setSelectedProject(createdProject);
+            } catch (error) {
+                console.error('Ошибка при создании проекта:', error);
+                alert('Не удалось создать проект');
+            }
         }
     };
 
@@ -103,7 +120,6 @@ const MainPage = () => {
 
     const handleCreateTask = () => {
         if (newTask.title.trim() && selectedProject) {
-
             if (newTask.parentId && newTask.parentId !== 'root' &&
                 !canSetTaskParent(selectedProject.id, -1, newTask.parentId)) {
                 alert('Невозможно установить выбранного родителя (обнаружен цикл)');
@@ -111,7 +127,12 @@ const MainPage = () => {
             }
 
             addTaskToProject(selectedProject.id, newTask);
-            setNewTask({ title: '', dueDate: '', assignee: '', parentId: null });
+            setNewTask({
+                title: '',
+                dueDate: '',
+                assignee: '',
+                parentId: null
+            });
             setShowCreateTask(false);
         }
     };
@@ -123,7 +144,6 @@ const MainPage = () => {
 
             const oldParentId = oldTask.parentId;
             const newParentId = editingTask.parentId;
-
 
             if (editingTask.parentId && editingTask.parentId !== 'root' &&
                 !canSetTaskParent(selectedProject.id, editingTask.id, editingTask.parentId)) {
@@ -180,7 +200,6 @@ const MainPage = () => {
         }
     };
 
-
     const handleLogout = () => {
         logout();
         setSelectedProject(null);
@@ -201,11 +220,10 @@ const MainPage = () => {
         return task?.parentId === 'root';
     };
 
-
     const isProjectCreator = selectedProject && currentUser &&
         selectedProject.creator === currentUser.username;
 
-    // 3. ✅ Отображение состояния загрузки (до проверки аутентификации)
+    // Отображение состояния загрузки
     if (loading) {
         return (
             <div className="main-page loading-screen">
@@ -214,10 +232,14 @@ const MainPage = () => {
         );
     }
 
-    // 4. ✅ Если пользователь не аутентифицирован и модаль не открыт,
-    //    открываем модаль, но компонент продолжает рендерить, чтобы показать его.
-    //    (Фактическое отображение модаля контролируется showLogin).
-
+    // Если пользователь не аутентифицирован, показываем только загрузку
+    if (!isAuthenticated) {
+        return (
+            <div className="main-page loading-screen">
+                <div className="loading-spinner">Перенаправление на страницу авторизации...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="main-page">
@@ -227,8 +249,6 @@ const MainPage = () => {
             />
             <div className="block-container">
                 <div className="main-layout">
-                    {/* Все остальные компоненты требуют currentUser, поэтому они будут работать
-              корректно только если isAuthenticated=true, что скрывает LoginModal */}
                     <LeftSidebar
                         projects={projects}
                         selectedProject={selectedProject}
@@ -278,6 +298,7 @@ const MainPage = () => {
                         isProjectCreator={isProjectCreator}
                         onDeleteProject={handleDeleteProject}
                         currentUser={currentUser}
+                        allUsers={allUsers}
                     />
                 </div>
             </div>

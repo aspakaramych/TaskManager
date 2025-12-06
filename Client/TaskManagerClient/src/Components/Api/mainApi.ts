@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const mainApi = axios.create({
-    baseURL: 'http://localhost:15378/api/Main', // Предположим, что это ваш основной URL
+    baseURL: 'http://localhost:15378/api/Main',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -9,7 +9,6 @@ const mainApi = axios.create({
 
 mainApi.interceptors.request.use(
     (config) => {
-        // Читаем токены из localStorage
         const authTokens = localStorage.getItem('authTokens');
 
         if (authTokens) {
@@ -18,12 +17,10 @@ mainApi.interceptors.request.use(
                 const accessToken = parsedTokens.accessToken;
 
                 if (accessToken) {
-                    // 💡 КЛЮЧЕВОЙ ШАГ: Прикрепляем токен к заголовку Authorization
                     config.headers.Authorization = `Bearer ${accessToken}`;
                 }
             } catch (error) {
                 console.error("Ошибка парсинга токенов из localStorage:", error);
-                // Если парсинг не удался, не прикрепляем заголовок
             }
         }
 
@@ -34,7 +31,7 @@ mainApi.interceptors.request.use(
     }
 );
 
-interface Project {
+interface ApiProject {
     id: string;
     title: string;
     description: string;
@@ -68,11 +65,10 @@ export class TaskCreateDto {
     public Deadline: Date = new Date();
 }
 
-export const getAllProjects = async () : Promise<Project[]> => {
+export const getAllProjects = async (): Promise<ApiProject[]> => {
     try {
-        const response = await mainApi.get<Project[]>("/")
+        const response = await mainApi.get<ApiProject[]>("/")
         return response.data;
-
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
@@ -90,32 +86,33 @@ export const getAllProjects = async () : Promise<Project[]> => {
     }
 }
 
-export const apiCreateProject = async (title: string, description: string) : Promise<void> => {
+export const apiCreateProject = async (title: string, description: string) => {
     try {
-        const response = await mainApi.post<void>("/projects", {title, description})
-
+        const response = await mainApi.post("/projects", {
+            title,
+            description
+        });
+        return response.data;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
-
             switch (status) {
                 case 400:
                     throw new Error("Validation failed.");
                 case 401:
                     throw new Error("Authentication failed.");
                 default:
-                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+                    throw new Error(`Ошибка при создании проекта. Статус: ${status}`);
             }
         }
         throw error;
     }
-}
+};
 
-export const apiGetAllTasks = async (id: string) : Promise<TaskResponse[]> => {
+export const apiGetAllTasks = async (id: string): Promise<TaskResponse[]> => {
     try {
         const response = await mainApi.get<TaskResponse[]>(`/project/${id}/tasks`)
         return response.data;
-
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
@@ -133,10 +130,9 @@ export const apiGetAllTasks = async (id: string) : Promise<TaskResponse[]> => {
     }
 }
 
-export const apiCreateTask = async (id: string, task: TaskCreateDto) : Promise<void> => {
+export const apiCreateTask = async (id: string, task: TaskCreateDto): Promise<void> => {
     try {
-        const response = await mainApi.post<void>(`/project/${id}/tasks`, task)
-
+        await mainApi.post<void>(`/project/${id}/tasks`, task);
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;

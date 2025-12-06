@@ -69,7 +69,7 @@ export const CenterArea = ({
                 task={editingTask}
                 onCancel={onCancelEditTask}
                 onToggleCompletion={
-                  currentUser && editingTask.assignee === currentUser.name 
+                  currentUser && editingTask.assignee === currentUser.username
                     ? () => onToggleTaskCompletion(editingTask.id) 
                     : undefined
                 }

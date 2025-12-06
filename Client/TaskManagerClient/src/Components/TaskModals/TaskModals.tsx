@@ -228,24 +228,24 @@ export const EditTaskModal = ({
 };
 
 interface ViewTaskModalProps {
-  task: Task;
-  onCancel: () => void;
-  onToggleCompletion?: () => void;
-  currentUser: User | null;
-  isRootTask: boolean;
-  areAllChildrenCompleted?: boolean;
+    task: Task;
+    onCancel: () => void;
+    onToggleCompletion?: () => void;
+    currentUser: User | null;
+    isRootTask: boolean;
+    areAllChildrenCompleted?: boolean;
 }
 
 export const ViewTaskModal = ({
-  task,
-  onCancel,
-  onToggleCompletion,
-  currentUser,
-  isRootTask,
-  areAllChildrenCompleted = true
-}: ViewTaskModalProps) => {
-  const canToggleCompletion = currentUser && 
-    (task.assignee === currentUser.name || task.assignee === '');
+                                  task,
+                                  onCancel,
+                                  onToggleCompletion,
+                                  currentUser,
+                                  isRootTask,
+                                  areAllChildrenCompleted = true
+                              }: ViewTaskModalProps) => {
+    const canToggleCompletion = currentUser &&
+        (task.assignee === currentUser.username || task.assignee === '');
   
   const allChildrenCompleted = areAllChildrenCompleted;
 

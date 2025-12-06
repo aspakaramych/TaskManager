@@ -9,39 +9,42 @@ import {
     addChildToParent,
     removeChildFromParent
 } from '../utils/taskTreeUtils';
-import {getAllProjects} from "../Components/Api/mainApi.ts";
+import { getAllProjects } from "../Components/Api/mainApi.ts";
 
 export const useProjects = () => {
     const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true); // Добавляем состояние загрузки
-    const [error, setError] = useState<string | null>(null); // Добавляем состояние ошибки
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProjects = async () => {
             setLoading(true);
             setError(null);
             try {
-                // 1. Вызов асинхронной функции API
                 const data = await getAllProjects();
 
-                // 2. Установка полученных данных
-                // Можно использовать requestAnimationFrame, хотя для API часто это не требуется,
-                // так как обновление состояния уже асинхронно
-                setProjects(data);
+                // Адаптируем данные из API к нашему интерфейсу Project
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const adaptedProjects: Project[] = data.map((apiProject: any) => ({
+                    id: Number(apiProject.id) || Date.now(), // Преобразуем строку в число
+                    title: apiProject.title || '',
+                    description: apiProject.description || '',
+                    participants: apiProject.participants || [],
+                    tasks: apiProject.tasks || [],
+                    creator: apiProject.creator || ''
+                }));
 
-            } catch (err: any) {
+                setProjects(adaptedProjects);
+            } catch (err) {
                 console.error("Failed to fetch projects:", err);
-                // 3. Обработка ошибки
-                setError(err.message || "Не удалось загрузить проекты.");
-                setProjects([]); // Очищаем проекты при ошибке
+                setError(err instanceof Error ? err.message : "Не удалось загрузить проекты.");
+                setProjects([]);
             } finally {
-                // 4. Завершение загрузки
                 setLoading(false);
             }
         };
 
         fetchProjects();
-        // Зависимости отсутствуют, вызывается один раз при монтировании компонента
     }, []);
 
     useEffect(() => {
@@ -50,31 +53,10 @@ export const useProjects = () => {
         }
     }, [projects]);
 
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    const updateProjectTasks = (projectId: number, updatedTasks: Task[]): Project[] => {
-        return projects.map(project => {
-            if (project.id === projectId) {
-                let finalTasks = [...updatedTasks];
-
-                const changedTasks = updatedTasks.filter(newTask => {
-                    const oldTask = project.tasks.find(t => t.id === newTask.id);
-                    return oldTask && oldTask.isCompleted !== newTask.isCompleted;
-                });
-
-                changedTasks.forEach(changedTask => {
-                    finalTasks = updateParentCompletion(changedTask.id, finalTasks);
-                });
-
-                return { ...project, tasks: finalTasks };
-            }
-            return project;
-        });
-    };
-
     const createProject = (projectData: NewProjectData, creator: string): Project => {
         const initialTask: Task = {
             id: Date.now(),
-            title: projectData.name,
+            title: projectData.title,
             description: 'Корневая задача проекта',
             dueDate: '',
             assignee: '',
@@ -85,7 +67,8 @@ export const useProjects = () => {
 
         const project: Project = {
             id: Date.now(),
-            name: projectData.name,
+            title: projectData.title,
+            description: projectData.description,
             participants: [creator, ...projectData.participants],
             tasks: [initialTask],
             creator
@@ -264,6 +247,8 @@ export const useProjects = () => {
 
     return {
         projects,
+        loading,  // Теперь используется
+        error,    // Теперь используется
         createProject,
         deleteProject,
         updateProject,
