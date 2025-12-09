@@ -1,4 +1,4 @@
-import {NewProjectData, User} from '../../types';
+import { NewProjectData, User } from '../../types';
 
 interface CreateProjectModalProps {
     newProject: NewProjectData;
@@ -28,25 +28,25 @@ export const CreateProjectModal = ({
                 />
             </div>
             <div className="form-group">
-                <label>Название проекта:</label>
-                <input
-                    type="text"
+                <label>Описание проекта:</label> {/* Исправил label */}
+                <textarea // Лучше использовать textarea для описания
                     value={newProject.description}
                     onChange={(e) => onNewProjectChange({...newProject, description: e.target.value})}
-                    placeholder="Введите название проекта"
+                    placeholder="Введите описание проекта"
+                    rows={3}
                 />
             </div>
             <div className="current-user-note">
                 <strong>{currentUser?.username}</strong> (вы) будете создателем проекта
             </div>
-        </div>
-        <div className="modal-actions">
-            <button className="confirm-btn" onClick={onCreateProject}>
-                Создать проект
-            </button>
-            <button className="cancel-btn" onClick={onCancel}>
-                Отмена
-            </button>
+            <div className="modal-actions">
+                <button className="confirm-btn" onClick={onCreateProject}>
+                    Создать проект
+                </button>
+                <button className="cancel-btn" onClick={onCancel}>
+                    Отмена
+                </button>
+            </div>
         </div>
     </div>
 );

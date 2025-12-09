@@ -6,7 +6,7 @@
 .task-item {
   padding: 0.75rem;
   margin: 0.25rem 0;
-  background: #f1f2f6;
+  background: #17212b;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s;
@@ -15,17 +15,19 @@
   /* Убираем фиксированную ширину, чтобы блок мог двигаться */
   width: calc(100% - 20px); /* Компенсируем отступ */
   box-sizing: border-box;
+    color: white;
 }
 
 .task-item:hover {
-  background: #dfe4ea;
+  background: #666;
   transform: translateX(2px);
+    color: #1b2533;
 }
 
 .task-item.completed {
-  background: #e8f5e8;
-  border-left-color: #2ed573;
-  opacity: 0.8;
+    background: #dfe4ea;
+    border-left-color: #2ed573;
+    opacity: 0.8;
 }
 
 .task-item.completed:hover {
@@ -44,7 +46,7 @@
 
 .task-item div {
   font-size: 0.8rem;
-  color: #666;
+  color: white;
 }
 
 .task-status {

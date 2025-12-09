@@ -1,6 +1,6 @@
 .multi-tree-graph-container {
   padding: 1rem;
-  background: white;
+  background: #17212b;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   height: 100%;
@@ -10,18 +10,18 @@
 
 .multi-tree-graph-container h3 {
   margin-top: 0;
-  color: #2f3542;
+  color: white;
   border-bottom: 2px solid #3742fa;
   padding-bottom: 0.5rem;
 }
 
 .global-stats {
-  background: #f8f9fa;
+  background: #1b2533;
   padding: 0.5rem;
   border-radius: 4px;
   margin-bottom: 1rem;
   font-size: 0.9rem;
-  color: #666;
+  color: #e3eaf1;
   text-align: center;
 }
 
@@ -40,10 +40,10 @@
   flex-direction: column;
   min-width: 500px; /* Увеличили минимальную ширину */
   flex: 1;
-  border: 1px solid #e9ecef;
+  border: 1px solid #17212b;
   border-radius: 8px;
   padding: 1rem;
-  background: #f8f9fa;
+  background: #1b2733;
 }
 
 .tree-header {
@@ -53,18 +53,18 @@
 
 .tree-header h4 {
   margin: 0 0 0.5rem 0;
-  color: #2f3542;
+  color: white;
   font-size: 1rem;
   padding: 0.5rem;
-  background: white;
+  background: #17212b;
   border-radius: 4px;
   border-left: 4px solid #3742fa;
 }
 
 .tree-stats {
   font-size: 0.8rem;
-  color: #666;
-  background: white;
+  color: white;
+  background: #17212b;
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   display: inline-block;
@@ -74,9 +74,8 @@
   flex: 1;
   min-height: 500px; /* Увеличили минимальную высоту */
   position: relative;
-  background: white;
+  background: #17212b;
   border-radius: 6px;
-  border: 1px solid #e9ecef;
 }
 
 .tree-controls {

@@ -58,10 +58,10 @@
 }
 
 .block-container {
-  width: 100%;
+  width: 1200px;
   max-width: 1200px;
   height: 800px;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: #17212b;
   margin: 0 auto 2rem auto;
   border-radius: 0 0 8px 8px;
   padding: 1rem;
@@ -199,7 +199,7 @@
 
 /* Стили для левой панели */
 .left-sidebar {
-  background: rgba(255, 255, 255, 0.9);
+  background: #1b2733;
   border-radius: 6px;
   padding: 1rem;
   overflow-y: auto;
@@ -209,12 +209,13 @@
 .task-item {
   padding: 0.75rem;
   margin: 0.5rem 0;
-  background: #f1f2f6;
+  background: #17212b;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s;
   border-left: 4px solid #3742fa;
   position: relative;
+    color: white;
 }
 
 .task-item.completed {
@@ -225,7 +226,7 @@
 
 .project-item:hover,
 .task-item:hover {
-  background: #dfe4ea;
+  background: #666;
   transform: translateX(2px);
 }
 
@@ -295,7 +296,7 @@
 
 /* Стили центральной области */
 .center-area {
-  background: rgba(255, 255, 255, 0.9);
+  background: #1b2733;
   border-radius: 6px;
   padding: 1rem;
   overflow-y: auto;
@@ -303,7 +304,7 @@
 
 .workspace h2 {
   margin-top: 0;
-  color: #2f3542;
+  color: white;
   border-bottom: 2px solid #3742fa;
   padding-bottom: 0.5rem;
 }
@@ -452,6 +453,14 @@
   box-sizing: border-box;
 }
 
+.form-group textarea {
+    width: 500px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
 .modal-actions {
   display: flex;
   gap: 0.5rem;
@@ -494,7 +503,7 @@
 
 /* Стили правой панели */
 .right-sidebar {
-  background: rgba(255, 255, 255, 0.9);
+  background: #1b2733;
   border-radius: 6px;
   padding: 1rem;
   overflow-y: auto;
@@ -503,7 +512,7 @@
 
 .right-sidebar h3 {
   margin-top: 0;
-  color: #2f3542;
+  color: white;
   border-bottom: 2px solid #3742fa;
   padding-bottom: 0.5rem;
 }
@@ -571,17 +580,12 @@
 .participant-item {
   padding: 0.75rem;
   margin: 0.5rem 0;
-  background: #f1f2f6;
+  background:  #17212b;
   border-radius: 4px;
-  border-left: 4px solid #2ed573;
+  border-left: 4px solid #3742fa;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.participant-item .creator {
-  font-weight: bold;
-  color: #3742fa;
 }
 
 .remove-participant-btn {
