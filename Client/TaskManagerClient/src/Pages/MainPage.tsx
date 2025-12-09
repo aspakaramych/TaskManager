@@ -21,7 +21,8 @@ const MainPage = () => {
         deleteTaskFromProject,
         toggleTaskCompletion,
         getAvailableParentsForTask,
-        canSetTaskParent
+        canSetTaskParent,
+        refreshProject
     } = useProjects();
 
     const {
@@ -251,6 +252,7 @@ const MainPage = () => {
                         isProjectCreator={isProjectCreator}
                         onDeleteProject={handleDeleteProject}
                         currentUser={currentUser}
+                        onRefreshProject={() => selectedProject && refreshProject(selectedProject.id)}
                     />
                 </div>
             </div>

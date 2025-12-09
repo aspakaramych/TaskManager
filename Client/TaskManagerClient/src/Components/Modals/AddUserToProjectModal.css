@@ -1,0 +1,252 @@
+/* AddUserToProjectModal.css */
+
+.add-user-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+.error-message {
+    background: #ffe6e6;
+    border: 1px solid #ff4757;
+    color: #ff4757;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-message::before {
+    content: "⚠";
+    font-size: 1.2rem;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    color: #747d8c;
+    font-style: italic;
+}
+
+.no-users-message {
+    text-align: center;
+    padding: 2rem;
+    color: #747d8c;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #dfe4ea;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3742fa;
+    box-shadow: 0 0 0 3px rgba(55, 66, 250, 0.1);
+}
+
+.users-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid #dfe4ea;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: #f8f9fa;
+}
+
+.users-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.users-list::-webkit-scrollbar-track {
+    background: #f1f2f6;
+    border-radius: 4px;
+}
+
+.users-list::-webkit-scrollbar-thumb {
+    background: #3742fa;
+    border-radius: 4px;
+}
+
+.users-list::-webkit-scrollbar-thumb:hover {
+    background: #2f38e0;
+}
+
+.user-item {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-item:hover {
+    background: #f1f2f6;
+    transform: translateX(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-item.selected {
+    background: #e3f2fd;
+    border-color: #3742fa;
+    box-shadow: 0 4px 12px rgba(55, 66, 250, 0.2);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    color: white;
+}
+
+.username {
+    font-weight: 600;
+    color: #2f3542;
+    font-size: 1rem;
+}
+
+.checkmark {
+    color: #3742fa;
+    font-size: 1.5rem;
+    font-weight: bold;
+    animation: checkmarkPop 0.3s ease;
+}
+
+@keyframes checkmarkPop {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.role-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #dfe4ea;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.role-select:focus {
+    outline: none;
+    border-color: #3742fa;
+    box-shadow: 0 0 0 3px rgba(55, 66, 250, 0.1);
+}
+
+.role-select option {
+    padding: 0.5rem;
+}
+
+.modal-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modal-actions button:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Улучшенные стили для кнопок */
+.confirm-btn,
+.cancel-btn {
+    transition: all 0.3s;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.confirm-btn::before,
+.cancel-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.confirm-btn:hover::before,
+.cancel-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.confirm-btn:hover {
+    background: #2f38e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(55, 66, 250, 0.4);
+}
+
+.cancel-btn:hover {
+    background: #636e7c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(116, 125, 140, 0.4);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .add-user-modal {
+        width: 95%;
+        max-width: none;
+        padding: 1.5rem;
+    }
+
+    .users-list {
+        max-height: 200px;
+    }
+
+    .user-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
+}

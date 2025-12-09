@@ -86,6 +86,25 @@ export interface UserInTeamDto {
     role: string;
 }
 
+export interface AddUserToTeamDto {
+    userId: string;
+    teamId: string;
+    role: string;
+}
+
+export enum RoleType {
+    ProjectManager = "ProjectManager",
+    Backend = "Backend",
+    Frontend = "Frontend",
+    Designer = "Designer",
+    Mobile = "Mobile",
+}
+
+export interface UserResponse {
+    id: string;
+    username: string;
+}
+
 export const getAllProjects = async (): Promise<Project[]> => {
     try {
         const response = await mainApi.get<Project[]>("/")
@@ -178,6 +197,47 @@ export const getProjectInfo = async (id: string): Promise<ProjectInfoDto> => {
         return response.data
     }
     catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+
+            switch (status) {
+                case 400:
+                    throw new Error("Validation failed.");
+                case 401:
+                    throw new Error("Authentication failed.");
+                default:
+                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+            }
+        }
+        throw error;
+    }
+}
+
+export const addUserToTeam = async (projectId: string, user: AddUserToTeamDto): Promise<void> => {
+    try {
+        const response = await mainApi.post<UserInTeamDto>(`project/${projectId}/team`, user)
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+
+            switch (status) {
+                case 400:
+                    throw new Error("Validation failed.");
+                case 401:
+                    throw new Error("Authentication failed.");
+                default:
+                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+            }
+        }
+        throw error;
+    }
+}
+
+export const getUsers = async (): Promise<UserResponse[]> => {
+    try {
+        const response = await mainApi.get<UserResponse[]>(`users`)
+        return response.data
+    } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
 
