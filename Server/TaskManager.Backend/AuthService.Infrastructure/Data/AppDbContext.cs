@@ -84,7 +84,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Project>()
             .HasMany(p => p.Tasks)
             .WithOne(t => t.Project)
-            .HasForeignKey(t => t.ProjectId);
+            .HasForeignKey(t => t.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
         
         modelBuilder.Entity<Subject>()
             .HasOne(s => s.Teacher)

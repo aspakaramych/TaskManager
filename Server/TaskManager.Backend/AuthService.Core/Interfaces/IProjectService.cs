@@ -6,7 +6,7 @@ public interface IProjectService
 {
     Task<ICollection<ProjectGetDto>> GetProjects(Guid userId);
     Task CreateProject(ProjectCreateDto createDto, Guid userId);
-    Task UpdateProject(ProjectUpdateDto updateDto, Guid userId);
+    Task UpdateProject(ProjectUpdateDto updateDto, Guid userId, Guid projectId);
     Task DeleteProject(Guid projectId, Guid userId);
 
     Task<ProjectInfoDto> GetProjectInfo(Guid projectId);
