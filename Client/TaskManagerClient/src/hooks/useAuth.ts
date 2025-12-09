@@ -3,21 +3,15 @@ import { User } from '../types';
 import { apiLogin, apiRegister, RegisterRequest } from "../Components/Api/authApi.ts";
 import {useNavigate} from "react-router";
 
-// Определяем типы данных, которые будут сохраняться отдельно
 type UserData = Omit<User, 'accessToken' | 'refreshToken'>;
 type Tokens = { accessToken: string; refreshToken: string; };
 
 export const useAuth = () => {
-    // 1. Состояние пользователя
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const navigate = useNavigate();
 
-    // 2. Состояние загрузки (Ключевое для правильного рендера)
     const [loading, setLoading] = useState(true);
 
-    // =========================================================
-    // 🚀 Эффект для ЧТЕНИЯ ИЗ localStorage (Запускается 1 раз)
-    // =========================================================
     useEffect(() => {
         const loadUserFromStorage = () => {
             const savedUser = localStorage.getItem('currentUser');
@@ -30,32 +24,23 @@ export const useAuth = () => {
 
                     const fullUser: User = { ...parsedUserData, ...parsedTokens };
 
-                    // Устанавливаем пользователя синхронно, но только в одном месте,
-                    // избегая проблем с каскадным рендером
                     setCurrentUser(fullUser);
 
                 } catch (error) {
                     console.error('Failed to parse saved user or tokens:', error);
-                    // Очищаем невалидные данные
                     localStorage.removeItem('currentUser');
                     localStorage.removeItem('authTokens');
                 }
             }
 
-            // 💡 ВАЖНО: Устанавливаем loading в false после завершения проверки
             setLoading(false);
         };
 
         loadUserFromStorage();
-        // Зависимости отсутствуют ([]), хук запускается только при монтировании
     }, []);
 
-    // =========================================================
-    // 💾 Эффект для ЗАПИСИ В localStorage (Запускается при изменении currentUser)
-    // =========================================================
     useEffect(() => {
         if (loading) {
-            // Игнорируем запуск эффекта, пока идет начальная загрузка
             return;
         }
 
@@ -74,16 +59,11 @@ export const useAuth = () => {
             localStorage.setItem('currentUser', JSON.stringify(userData));
             localStorage.setItem('authTokens', JSON.stringify(tokens));
         } else {
-            // Очистка при логауте
             localStorage.removeItem('currentUser');
             localStorage.removeItem('authTokens');
         }
-    }, [currentUser, loading]); // Добавляем loading в зависимости для игнорирования первого запуска
+    }, [currentUser, loading]);
 
-
-    // =========================================================
-    // 🔑 ФУНКЦИИ АУТЕНТИФИКАЦИИ
-    // =========================================================
 
     const login = async (email: string, password: string): Promise<User> => {
         try {

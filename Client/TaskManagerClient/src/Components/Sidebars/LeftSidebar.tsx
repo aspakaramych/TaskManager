@@ -83,7 +83,6 @@ export const LeftSidebar = ({
         selectedProjectTitle: selectedProject?.title
     });
 
-    // Показываем кнопку всем аутентифицированным пользователям в проекте
     const shouldShowCreateTaskButton = selectedProject && currentUser;
 
     return (

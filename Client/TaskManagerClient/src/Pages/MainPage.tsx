@@ -9,11 +9,12 @@ import { CenterArea } from '../Components/CenterArea/CenterArea';
 import type { NewProjectData, NewTaskData, TaskResponse, ProjectInfoDto, User } from '../types';
 import './MainPage.css';
 import { flattenTasks } from '../utils/taskTreeUtils';
-import { deleteProject } from '../Components/Api/mainApi';
+import { deleteProject, getAllProjects, deleteTask, getProjectInfo } from '../Components/Api/mainApi';
 
 const MainPage = () => {
     const {
         projects,
+        setProjects,
         loading: projectsLoading,
         createProject,
         addTaskToProject,
@@ -46,7 +47,6 @@ const MainPage = () => {
     });
     const [showLogin, setShowLogin] = useState(false);
 
-    // Check authentication after loading
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             setShowLogin(true);
@@ -57,7 +57,6 @@ const MainPage = () => {
         }
     }, [authLoading, isAuthenticated]);
 
-    // Sync selected project and task
     useEffect(() => {
         if (selectedProject) {
             const updatedProject = projects.find(p => p.id === selectedProject.id);
@@ -92,14 +91,12 @@ const MainPage = () => {
 
     const handleAddParticipant = (userName: string) => {
         if (selectedProject) {
-            // TODO: Implement API call for adding participant
             setShowAddParticipant(false);
         }
     };
 
     const handleRemoveParticipant = (participantName: string) => {
         if (selectedProject) {
-            // TODO: Implement API call for removing participant
         }
     };
 
@@ -128,10 +125,25 @@ const MainPage = () => {
         }
     };
 
-    const handleDeleteTask = (taskId: string, removeChildren: boolean) => {
+    const handleDeleteTask = async (taskId: string, removeChildren: boolean) => {
         if (selectedProject) {
-            deleteTaskFromProject(selectedProject.id, taskId, removeChildren);
-            setEditingTask(null);
+            if (!window.confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                return;
+            }
+
+            try {
+                await deleteTask(selectedProject.id, taskId);
+
+                setEditingTask(null);
+
+                const updatedProject = await getProjectInfo(selectedProject.id);
+
+                setSelectedProject(updatedProject);
+
+            } catch (err) {
+                console.error('Failed to delete task:', err);
+                alert('Не удалось удалить задачу');
+            }
         }
     };
 
@@ -155,17 +167,14 @@ const MainPage = () => {
     const handleDeleteProject = async (projectId: string) => {
         if (window.confirm('Вы уверены, что хотите удалить этот проект? Все задачи будут удалены.')) {
             try {
-                await deleteProject(projectId); // Используем API метод
+                await deleteProject(projectId);
 
-                // Обновляем локальное состояние
                 if (selectedProject && selectedProject.id === projectId) {
                     setSelectedProject(null);
                     setEditingTask(null);
                 }
 
-                // Можно вызвать refresh для обновления списка проектов
-                // или перезагрузить страницу
-                window.location.reload(); // Простой вариант
+                window.location.reload();
 
             } catch (error) {
                 console.error('Failed to delete project:', error);
@@ -194,11 +203,9 @@ const MainPage = () => {
         return task?.taskHeadId === null;
     };
 
-    // Check if current user is project creator
     const isProjectCreator = selectedProject && currentUser &&
         selectedProject.team.users.some(u => u.id === currentUser.username && u.role === 'Creator');
 
-    // Show loading screen
     if (authLoading || projectsLoading) {
         return (
             <div className="main-page loading-screen">

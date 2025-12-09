@@ -1,6 +1,5 @@
 import { TaskResponse, TeamResponse, ProjectInfoDto, TaskProgress, UserInTeamDto } from "../Components/Api/mainApi.ts";
 
-// Re-export API types for convenience
 export type { TaskResponse, TeamResponse, ProjectInfoDto, UserInTeamDto };
 export { TaskProgress };
 
