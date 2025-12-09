@@ -116,6 +116,18 @@ export interface UserResponse {
     username: string;
 }
 
+export interface TaskUpdateDto {
+    title?: string;
+    description?: string;
+    deadline?: Date;
+    progress?: TaskProgress;
+}
+
+export interface ProjectUpdateDto {
+    title?: string;
+    description?: string;
+}
+
 export const getAllProjects = async (): Promise<Project[]> => {
     try {
         const response = await mainApi.get<Project[]>("/")
@@ -309,6 +321,86 @@ export const assignTask = async (projectId: string, taskId: string): Promise<voi
 export const rejectTask = async (projectId: string, taskId: string): Promise<void> => {
     try {
         const response = await mainApi.delete(`project/${projectId}/task/${taskId}/assign`)
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+
+            switch (status) {
+                case 400:
+                    throw new Error("Validation failed.");
+                case 401:
+                    throw new Error("Authentication failed.");
+                default:
+                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+            }
+        }
+        throw error;
+    }
+}
+
+export const updateTask = async (task: TaskUpdateDto, projectId: string, taskId: string): Promise<void> => {
+    try {
+        const response = await mainApi.put(`project/${projectId}/task/${taskId}`, task)
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+
+            switch (status) {
+                case 400:
+                    throw new Error("Validation failed.");
+                case 401:
+                    throw new Error("Authentication failed.");
+                default:
+                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+            }
+        }
+        throw error;
+    }
+}
+
+export const deleteTask = async (projectId: string, taskId: string): Promise<void> => {
+    try {
+        const response = await mainApi.delete(`project/${projectId}/task/${taskId}`)
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+
+            switch (status) {
+                case 400:
+                    throw new Error("Validation failed.");
+                case 401:
+                    throw new Error("Authentication failed.");
+                default:
+                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+            }
+        }
+        throw error;
+    }
+}
+
+export const updateProject = async (projectId: string, project: ProjectUpdateDto): Promise<void> => {
+    try {
+        const response = await mainApi.put(`project/${projectId}`, project)
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            const status = error.response.status;
+
+            switch (status) {
+                case 400:
+                    throw new Error("Validation failed.");
+                case 401:
+                    throw new Error("Authentication failed.");
+                default:
+                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
+            }
+        }
+        throw error;
+    }
+}
+
+export const deleteProject = async (projectId: string): Promise<void> => {
+    try {
+        const response = await mainApi.delete(`project/${projectId}`)
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             const status = error.response.status;
