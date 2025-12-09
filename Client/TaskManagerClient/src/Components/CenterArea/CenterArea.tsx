@@ -16,6 +16,7 @@ interface CenterAreaProps {
   onDeleteTask: (taskId: string, removeChildren: boolean) => void;
   onCancelEditTask: () => void;
   onToggleTaskCompletion: (taskId: string) => void;
+  onTaskAssigned?: () => void;
   isProjectCreator: boolean;
   currentUser: User | null;
   availableParents: TaskResponse[];
@@ -35,6 +36,7 @@ export const CenterArea = ({
   onDeleteTask,
   onCancelEditTask,
   onToggleTaskCompletion,
+  onTaskAssigned,
   isProjectCreator,
   currentUser,
   availableParents,
@@ -68,12 +70,14 @@ export const CenterArea = ({
             ) : (
               <ViewTaskModal
                 task={editingTask}
+                projectId={selectedProject.id}
                 onCancel={onCancelEditTask}
                 onToggleCompletion={
                   currentUser && editingTask.assigneeId === currentUser.username
                     ? () => onToggleTaskCompletion(editingTask.id)
                     : undefined
                 }
+                onTaskAssigned={onTaskAssigned}
                 currentUser={currentUser}
                 isRootTask={isRootTask}
                 areAllChildrenCompleted={checkAllChildrenCompleted(editingTask)}

@@ -238,6 +238,7 @@ const MainPage = () => {
                         onDeleteTask={handleDeleteTask}
                         onCancelEditTask={() => setEditingTask(null)}
                         onToggleTaskCompletion={handleToggleTaskCompletion}
+                        onTaskAssigned={() => selectedProject && refreshProject(selectedProject.id)}
                         isProjectCreator={isProjectCreator}
                         currentUser={currentUser}
                         availableParents={getAvailableParents()}

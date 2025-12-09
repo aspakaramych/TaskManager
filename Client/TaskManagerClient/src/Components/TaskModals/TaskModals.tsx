@@ -1,4 +1,6 @@
+import React from 'react';
 import { TaskResponse, User, NewTaskData, UserInTeamDto, TaskProgress } from '../../types';
+import { TaskInfo, getTaskInfo, assignTask, rejectTask } from '../Api/mainApi';
 import { formatDeadline } from '../../utils/taskTreeUtils';
 
 interface CreateTaskModalProps {
@@ -246,8 +248,10 @@ export const EditTaskModal = ({
 
 interface ViewTaskModalProps {
   task: TaskResponse;
+  projectId: string;
   onCancel: () => void;
   onToggleCompletion?: () => void;
+  onTaskAssigned?: () => void;
   currentUser: User | null;
   isRootTask: boolean;
   areAllChildrenCompleted?: boolean;
@@ -255,17 +259,129 @@ interface ViewTaskModalProps {
 
 export const ViewTaskModal = ({
   task,
+  projectId,
   onCancel,
   onToggleCompletion,
+  onTaskAssigned,
   currentUser,
   isRootTask,
   areAllChildrenCompleted = true
 }: ViewTaskModalProps) => {
+  const [taskInfo, setTaskInfo] = React.useState<TaskInfo | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string>('');
+  const [assigning, setAssigning] = React.useState<boolean>(false);
+  const [rejecting, setRejecting] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    loadTaskInfo();
+  }, [task.id, projectId]);
+
+  const loadTaskInfo = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const info = await getTaskInfo(projectId, task.id);
+      setTaskInfo(info);
+    } catch (err) {
+      console.error('Error loading task info:', err);
+      setError('Не удалось загрузить детальную информацию о задаче');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAssignTask = async () => {
+    try {
+      setAssigning(true);
+      setError('');
+      await assignTask(projectId, task.id);
+
+      // Обновить информацию о задаче
+      await loadTaskInfo();
+
+      // Вызвать callback для обновления родительского компонента
+      if (onTaskAssigned) {
+        onTaskAssigned();
+      }
+    } catch (err) {
+      console.error('Error assigning task:', err);
+      setError('Не удалось взять задачу');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const handleRejectTask = async () => {
+    try {
+      setRejecting(true);
+      setError('');
+      await rejectTask(projectId, task.id);
+
+      // Обновить информацию о задаче
+      await loadTaskInfo();
+
+      // Вызвать callback для обновления родительского компонента
+      if (onTaskAssigned) {
+        onTaskAssigned();
+      }
+    } catch (err) {
+      console.error('Error rejecting task:', err);
+      setError('Не удалось отказаться от задачи');
+    } finally {
+      setRejecting(false);
+    }
+  };
+
   const canToggleCompletion = currentUser &&
     (task.assigneeId === currentUser.username || !task.assigneeId);
 
+  const canAssignTask = currentUser && !task.assigneeId;
+
+  // Assuming currentUser.username matches assigneeId (id or username depending entirely on backend/frontend agreement)
+  // Reusing the same logic pattern as canToggleCompletion's check
+  const canRejectTask = currentUser && task.assigneeId === currentUser.username;
+
   const allChildrenCompleted = areAllChildrenCompleted;
   const isDone = task.progress === TaskProgress.Done;
+
+  if (loading) {
+    return (
+      <div className="task-modal">
+        <h3>Просмотр задачи</h3>
+        <div className="loading-message">Загрузка информации о задаче...</div>
+        <div className="modal-actions">
+          <button className="cancel-btn" onClick={onCancel}>
+            Закрыть
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="task-modal">
+        <h3>Просмотр задачи</h3>
+        <div className="error-message">{error}</div>
+        <div className="task-detail-view">
+          <div className="detail-row">
+            <label>Название:</label>
+            <span>{task.title}</span>
+          </div>
+          <div className="detail-row">
+            <label>Срок выполнения:</label>
+            <span>{task.deadline ? formatDeadline(task.deadline) : 'Не установлен'}</span>
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button className="cancel-btn" onClick={onCancel}>
+            Закрыть
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="task-modal">
@@ -273,22 +389,31 @@ export const ViewTaskModal = ({
       <div className="task-detail-view">
         <div className="detail-row">
           <label>Название:</label>
-          <span>{task.title}</span>
+          <span>{taskInfo?.title || task.title}</span>
+        </div>
+        <div className="detail-row">
+          <label>Описание:</label>
+          <span>{taskInfo?.description || 'Нет описания'}</span>
         </div>
         <div className="detail-row">
           <label>Срок выполнения:</label>
-          <span>{task.deadline ? formatDeadline(task.deadline) : 'Не установлен'}</span>
+          <span>{taskInfo?.deadline ? formatDeadline(taskInfo.deadline) : task.deadline ? formatDeadline(task.deadline) : 'Не установлен'}</span>
         </div>
         <div className="detail-row">
           <label>Ответственный:</label>
-          <span>{task.assigneeName || 'Не назначен'}</span>
+          <span>
+            {taskInfo?.users && taskInfo.users.length > 0
+              ? taskInfo.users.join(', ')
+              : task.assigneeName || 'Не назначен'}
+          </span>
         </div>
         <div className="detail-row">
           <label>Родительская задача:</label>
           <span>
             {isRootTask ? 'Корневая задача' :
-              task.taskHeadId === null ? 'Нет' :
-                `Задача #${task.taskHeadId}`}
+              taskInfo?.taskHeadName ? taskInfo.taskHeadName :
+                task.taskHeadId === null ? 'Нет' :
+                  `Задача #${task.taskHeadId}`}
           </span>
         </div>
         <div className="detail-row">
@@ -298,10 +423,10 @@ export const ViewTaskModal = ({
         <div className="detail-row">
           <label>Статус:</label>
           <span className={`status ${isDone ? 'completed' : 'in-progress'}`}>
-            {isDone ? '✅ Выполнена' :
+            {taskInfo?.status || (isDone ? '✅ Выполнена' :
               task.progress === TaskProgress.Taken ? '⏳ В работе' :
                 task.progress === TaskProgress.Canceled ? '❌ Отменено' :
-                  '📝 Создано'}
+                  '📝 Создано')}
           </span>
         </div>
         {task.children && task.children.length > 0 && !isDone && (
@@ -337,6 +462,24 @@ export const ViewTaskModal = ({
       )}
 
       <div className="modal-actions">
+        {canAssignTask && (
+          <button
+            className="confirm-btn"
+            onClick={handleAssignTask}
+            disabled={assigning}
+          >
+            {assigning ? 'Назначение...' : 'Взять задачу'}
+          </button>
+        )}
+        {canRejectTask && (
+          <button
+            className="delete-btn"
+            onClick={handleRejectTask}
+            disabled={rejecting}
+          >
+            {rejecting ? 'Отказ...' : 'Отказаться от задачи'}
+          </button>
+        )}
         <button className="cancel-btn" onClick={onCancel}>
           Закрыть
         </button>

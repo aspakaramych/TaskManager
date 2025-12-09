@@ -11,17 +11,19 @@ public class TaskService : ITaskService
     private readonly IProjectRepository _projectRepository;
     private readonly ITeamRoleRepository _teamRoleRepository;
     private readonly IPickedTaskRepository _pickedTaskRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<TaskService> _logger;
 
     public TaskService(ITaskRepository taskRepository, IProjectRepository projectRepository,
         ITeamRoleRepository teamRoleRepository, IPickedTaskRepository pickedTaskRepository,
-       ILogger<TaskService> logger)
+       ILogger<TaskService> logger, IUserRepository userRepository)
     {
         _taskRepository = taskRepository;
         _projectRepository = projectRepository;
         _teamRoleRepository = teamRoleRepository;
         _pickedTaskRepository = pickedTaskRepository;
         _logger = logger;
+        _userRepository = userRepository;
     }
 
     public async Task CreateTask(TaskCreateDto task, Guid projectId, Guid userId)
@@ -51,6 +53,16 @@ public class TaskService : ITaskService
             TaskHeadId = task.HeadTaskId,
         };
         await _taskRepository.AddAsync(newTask);
+        
+        if (task.UserId != null)
+        {
+            var assigneTask = new PickedTask
+            {
+                TaskId = newTask.Id,
+                UserId = (Guid)task.UserId,
+            };
+            await _pickedTaskRepository.AddAsync(assigneTask);
+        }
         await _taskRepository.SaveChangesAsync();
     }
 
@@ -176,5 +188,38 @@ public class TaskService : ITaskService
             UserId = userId
         };
         await _pickedTaskRepository.AddAsync(pickedTask);
+        await _pickedTaskRepository.SaveChangesAsync();
+    }
+
+    public async Task RejectTask(Guid taskId, Guid userId)
+    {
+        var pickedTask = await _pickedTaskRepository.GetByUserAndTaskAsync(userId, taskId);
+        await _pickedTaskRepository.DeleteAsync(pickedTask);
+    }
+
+    public async Task<TaskInfo> GetTaskInfo(Guid projectId, Guid taskId)
+    {
+        var task = await _taskRepository.GetByIdAsync(taskId);
+        string taskHeadTitle = null;
+        if (task.TaskHeadId != null)
+        {
+            var taskHead = await _taskRepository.GetByIdAsync((Guid)task.TaskHeadId);
+            taskHeadTitle = taskHead.Title;
+        }
+        string pickedUserName = null;
+        var pickedTask = await _pickedTaskRepository.GetByTaskIdAsync(taskId);
+        var users = pickedTask.Select(async p => await _userRepository.GetByIdAsync(p.UserId));
+        var userNames = users.Select(u => u.Result.Username);
+        var taskInfo = new TaskInfo
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            Deadline = task.Deadline,
+            Status = task.Progress.ToString(),
+            TaskHeadName = taskHeadTitle,
+            Users = userNames
+        };
+        return taskInfo;
     }
 }

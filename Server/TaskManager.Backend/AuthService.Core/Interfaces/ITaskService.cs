@@ -9,5 +9,7 @@ public interface ITaskService
     Task DeleteTask(Guid taskId);
     Task<IEnumerable<TaskResponse>> GetTasks(Guid projectId);
     Task ConnectTask(Guid projectId, Guid userId, TaskConnect req);
-    Task AssignTask(Guid taskId, Guid userId);    
+    Task AssignTask(Guid taskId, Guid userId);
+    Task<TaskInfo> GetTaskInfo(Guid projectId, Guid taskId);
+    Task RejectTask(Guid taskId, Guid userId);
 }

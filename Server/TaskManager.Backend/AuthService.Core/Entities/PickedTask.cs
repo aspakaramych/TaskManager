@@ -6,5 +6,5 @@ public class PickedTask
     public Guid TaskId { get; set; }
     
     public User User { get; set; }
-    public TaskEntity TaskEntity { get; set; }
+    public TaskEntity Task { get; set; }
 }

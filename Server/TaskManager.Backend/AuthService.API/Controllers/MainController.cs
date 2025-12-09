@@ -227,4 +227,55 @@ public class MainController : ControllerBase
         }
         
     }
+    
+    [HttpGet("project/{projectId}/task/{taskId}")]
+    public async Task<IActionResult> GetTaskInfo(Guid projectId, Guid taskId)
+    {
+        var task = await _taskService.GetTaskInfo(projectId, taskId);
+        return Ok(task);
+    }
+
+    [HttpGet("project/{projectId}/task/{taskId}/assign")]
+    [Authorize]
+    public async Task<IActionResult> AssignTask(Guid projectId, Guid taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.AssignTask(taskId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500);
+        }
+    }
+    [HttpDelete("project/{projectId}/task/{taskId}/assign")]
+    [Authorize]
+    public async Task<IActionResult> RejectTask(Guid projectId, Guid taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.RejectTask(taskId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500);
+        }
+    }
+    
 }
