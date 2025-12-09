@@ -9,6 +9,7 @@ import { CenterArea } from '../Components/CenterArea/CenterArea';
 import type { NewProjectData, NewTaskData, TaskResponse, ProjectInfoDto, User } from '../types';
 import './MainPage.css';
 import { flattenTasks } from '../utils/taskTreeUtils';
+import { deleteProject } from '../Components/Api/mainApi';
 
 const MainPage = () => {
     const {
@@ -152,12 +153,24 @@ const MainPage = () => {
         }
     };
 
-    const handleDeleteProject = (projectId: string) => {
+    const handleDeleteProject = async (projectId: string) => {
         if (window.confirm('Вы уверены, что хотите удалить этот проект? Все задачи будут удалены.')) {
-            deleteProject(projectId);
-            if (selectedProject && selectedProject.id === projectId) {
-                setSelectedProject(null);
-                setEditingTask(null);
+            try {
+                await deleteProject(projectId); // Используем API метод
+
+                // Обновляем локальное состояние
+                if (selectedProject && selectedProject.id === projectId) {
+                    setSelectedProject(null);
+                    setEditingTask(null);
+                }
+
+                // Можно вызвать refresh для обновления списка проектов
+                // или перезагрузить страницу
+                window.location.reload(); // Простой вариант
+
+            } catch (error) {
+                console.error('Failed to delete project:', error);
+                alert('Не удалось удалить проект');
             }
         }
     };

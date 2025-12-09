@@ -34,14 +34,12 @@ export const RightSidebar = ({
         >
           Добавить участника
         </button>
-        {isProjectCreator && (
           <button
             className="delete-project-btn"
             onClick={() => onDeleteProject(selectedProject.id)}
           >
             Удалить проект
           </button>
-        )}
         {showAddParticipant && (
           <AddUserToProjectModal
             projectId={selectedProject.id}
