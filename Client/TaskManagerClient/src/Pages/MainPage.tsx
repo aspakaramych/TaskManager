@@ -47,6 +47,7 @@ const MainPage = () => {
         taskHeadId: null
     });
     const [showLogin, setShowLogin] = useState(false);
+    const [showUpdateProject, setShowUpdateProject] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
@@ -269,6 +270,9 @@ const MainPage = () => {
                         selectedProject={selectedProject}
                         showAddParticipant={showAddParticipant}
                         onAddParticipant={handleAddParticipant}
+                        onShowUpdateProject={setShowUpdateProject}
+                        showUpdateProject={showUpdateProject}
+                        onUpdateProject={updateProject}
                         onShowAddParticipant={setShowAddParticipant}
                         onRemoveParticipant={handleRemoveParticipant}
                         isProjectCreator={isProjectCreator}

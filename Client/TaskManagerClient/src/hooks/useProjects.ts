@@ -8,7 +8,7 @@ import {
     findTaskById,
     getRootTasks
 } from '../utils/taskTreeUtils';
-import { getAllProjects, getProjectInfo, apiCreateProject, apiCreateTask, updateProject as apiUpdateProject } from "../Components/Api/mainApi.ts";
+import { getAllProjects, getProjectInfo, apiCreateProject, apiCreateTask, updateProject as apiUpdateProject, ProjectUpdateDto, deleteTask } from "../Components/Api/mainApi.ts";
 
 export const useProjects = () => {
     const [projects, setProjects] = useState<ProjectInfoDto[]>([]);
@@ -99,7 +99,7 @@ export const useProjects = () => {
     };
 
 
-    const updateProject = async (projectId: string, updates: Partial<ProjectInfoDto>) => {
+    const updateProject = async (projectId: string, updates: ProjectUpdateDto) => {
         try {
             await apiUpdateProject(projectId, updates);
             // Update local state or refresh project
