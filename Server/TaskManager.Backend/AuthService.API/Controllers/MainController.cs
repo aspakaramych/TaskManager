@@ -277,5 +277,91 @@ public class MainController : ControllerBase
             return StatusCode(500);
         }
     }
-    
+
+    [HttpPut("project/{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProject(Guid projectId, [FromBody] ProjectUpdateDto projectUpdateDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _projectService.UpdateProject(projectUpdateDto, reqUserId, projectId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpDelete("project/{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteProject(Guid projectId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _projectService.DeleteProject(projectId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+
+    [HttpPut("project/{projectId}/task/{taskId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateTask(Guid projectId, Guid taskId, [FromBody] TaskUpdateDto taskUpdateDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+        try
+        {
+            await _taskService.UpdateTask(taskUpdateDto, projectId, taskId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpDelete("project/{projectId}/task/{taskId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteTask(Guid projectId, Guid taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+        try
+        {
+            await _taskService.DeleteTask(taskId, reqUserId, projectId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

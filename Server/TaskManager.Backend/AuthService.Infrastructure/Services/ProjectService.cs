@@ -97,9 +97,9 @@ public class ProjectService : IProjectService
         await _projectRepository.SaveChangesAsync();
     }
 
-    public async Task UpdateProject(ProjectUpdateDto updateDto, Guid userId)
+    public async Task UpdateProject(ProjectUpdateDto updateDto, Guid userId, Guid projectId)
     {
-        var project = await _projectRepository.GetByIdAsync(updateDto.Id)
+        var project = await _projectRepository.GetByIdAsync(projectId)
             ?? throw new KeyNotFoundException("Project not found.");
 
         var teamRoles = await _teamRoleRepository.GetByUserIdAsync(userId);
@@ -114,6 +114,7 @@ public class ProjectService : IProjectService
             project.Description = updateDto.Description;
 
         await _projectRepository.UpdateAsync(project);
+        await _projectRepository.SaveChangesAsync();
     }
 
     public async Task DeleteProject(Guid projectId, Guid userId)
@@ -127,6 +128,7 @@ public class ProjectService : IProjectService
         if (role != "ProjectManager")
             throw new UnauthorizedAccessException("Only ProjectManager can delete the project.");
         await _projectRepository.DeleteAsync(project);
+        await _projectRepository.SaveChangesAsync();
     }
 
     public async Task<ProjectInfoDto> GetProjectInfo(Guid projectId)

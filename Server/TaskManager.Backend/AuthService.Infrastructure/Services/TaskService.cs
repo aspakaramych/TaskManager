@@ -66,7 +66,7 @@ public class TaskService : ITaskService
         await _taskRepository.SaveChangesAsync();
     }
 
-    public async Task UpdateTask(TaskUpdateDto task, Guid projectId)
+    public async Task UpdateTask(TaskUpdateDto task, Guid projectId, Guid taskId, Guid userId)
     {
         var project = await _projectRepository.GetByIdAsync(projectId);
         if (project == null)
@@ -75,23 +75,46 @@ public class TaskService : ITaskService
             throw new ArgumentException("Project does not exist");
         }
 
-        var newTask = await _taskRepository.GetByIdAsync(task.Id);
+        var newTask = await _taskRepository.GetByIdAsync(taskId);
         if (newTask == null)
         {
             _logger.LogError($"Project with id: {projectId} does not exist");
             throw new ArgumentException("Task does not exist");
         }
+        
+        var teamRoles = await _teamRoleRepository.GetByUserIdAsync(userId);
+        var role = teamRoles.FirstOrDefault(tr => tr.TeamId == project.TeamId)?.Role.ToString();
 
-        newTask.Description = task.Description;
-        newTask.Title = task.Title;
-        newTask.Deadline = (DateTime)task.Deadline;
-        newTask.Progress = (TaskProgress)task.Progress;
+        if (role != "ProjectManager")
+            throw new UnauthorizedAccessException("Only ProjectManager can update the project.");
+        
+        if (!string.IsNullOrWhiteSpace(task.Title))
+            newTask.Title = task.Title;
+        if (task.Description != null)
+            newTask.Description = task.Description;
+        if (task.Deadline != null)        
+            newTask.Deadline = (DateTime)task.Deadline;
+        if (task.Progress != null)
+            newTask.Progress = (TaskProgress)task.Progress;
+        
+        
         await _taskRepository.UpdateAsync(newTask);
         await _taskRepository.SaveChangesAsync();
     }
 
-    public async Task DeleteTask(Guid taskId)
+    public async Task DeleteTask(Guid taskId, Guid userId, Guid projectId)
     {
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        if (project == null)
+        {
+            _logger.LogError($"Project with id: {projectId} does not exist");
+            throw new ArgumentException("Project does not exist");
+        }
+        var teamRoles = await _teamRoleRepository.GetByUserIdAsync(userId);
+        var role = teamRoles.FirstOrDefault(tr => tr.TeamId == project.TeamId)?.Role.ToString();
+
+        if (role != "ProjectManager")
+            throw new UnauthorizedAccessException("Only ProjectManager can update the project.");
         var task = await _taskRepository.GetByIdAsync(taskId);
         await _taskRepository.DeleteAsync(task);
         await _taskRepository.SaveChangesAsync();

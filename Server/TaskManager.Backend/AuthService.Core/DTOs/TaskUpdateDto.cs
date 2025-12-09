@@ -5,9 +5,6 @@ namespace AuthService.Core.DTOs;
 
 public class TaskUpdateDto
 {
-    [Required]
-    public Guid Id { get; set; }
-
     [StringLength(200, MinimumLength = 1)]
     public string? Title { get; set; }
 
