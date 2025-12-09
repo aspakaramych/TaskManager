@@ -8,7 +8,7 @@ import {
     findTaskById,
     getRootTasks
 } from '../utils/taskTreeUtils';
-import { getAllProjects, getProjectInfo, apiCreateProject, apiCreateTask } from "../Components/Api/mainApi.ts";
+import { getAllProjects, getProjectInfo, apiCreateProject, apiCreateTask, updateProject as apiUpdateProject } from "../Components/Api/mainApi.ts";
 
 export const useProjects = () => {
     const [projects, setProjects] = useState<ProjectInfoDto[]>([]);
@@ -101,11 +101,15 @@ export const useProjects = () => {
         }
     };
 
-    const updateProject = (projectId: string, updates: Partial<ProjectInfoDto>) => {
-        // TODO: Implement API call for updating project
-        setProjects(prev => prev.map(project =>
-            project.id === projectId ? { ...project, ...updates } : project
-        ));
+    const updateProject = async (projectId: string, updates: Partial<ProjectInfoDto>) => {
+        try {
+            await apiUpdateProject(projectId, updates);
+            // Update local state or refresh project
+            await refreshProject(projectId);
+        } catch (err) {
+            console.error(`Failed to update project ${projectId}:`, err);
+            throw err;
+        }
     };
 
     const addTaskToProject = async (projectId: string, taskData: NewTaskData) => {

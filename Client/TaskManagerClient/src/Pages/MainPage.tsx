@@ -22,7 +22,8 @@ const MainPage = () => {
         toggleTaskCompletion,
         getAvailableParentsForTask,
         canSetTaskParent,
-        refreshProject
+        refreshProject,
+        updateProject
     } = useProjects();
 
     const {
@@ -45,6 +46,7 @@ const MainPage = () => {
         taskHeadId: null
     });
     const [showLogin, setShowLogin] = useState(false);
+    const [showUpdateProject, setShowUpdateProject] = useState(false);
 
     // Check authentication after loading
     useEffect(() => {
@@ -195,8 +197,8 @@ const MainPage = () => {
     };
 
     // Check if current user is project creator
-    const isProjectCreator = selectedProject && currentUser &&
-        selectedProject.team.users.some(u => u.id === currentUser.username && u.role === 'Creator');
+    const isProjectCreator = !!(selectedProject && currentUser &&
+        selectedProject.team.users.some(u => u.id === currentUser.username && u.role === 'Creator'));
 
     // Show loading screen
     if (authLoading || projectsLoading) {
@@ -260,6 +262,9 @@ const MainPage = () => {
                         selectedProject={selectedProject}
                         showAddParticipant={showAddParticipant}
                         onAddParticipant={handleAddParticipant}
+                        onShowUpdateProject={setShowUpdateProject}
+                        showUpdateProject={showUpdateProject}
+                        onUpdateProject={updateProject}
                         onShowAddParticipant={setShowAddParticipant}
                         onRemoveParticipant={handleRemoveParticipant}
                         isProjectCreator={isProjectCreator}

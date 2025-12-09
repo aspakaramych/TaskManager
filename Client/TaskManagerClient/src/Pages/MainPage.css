@@ -624,6 +624,23 @@
   color: #1976d2;
 }
 
+.update-project-btn {
+    background: #cc8f00;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    width: 100%;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.update-project-btn:hover {
+    background: #eca100;
+}
+
 .delete-project-btn {
   background: #ff4757;
   color: white;
