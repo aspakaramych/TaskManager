@@ -1,6 +1,6 @@
 import React from 'react';
 import { TaskResponse, User, NewTaskData, UserInTeamDto, TaskProgress } from '../../types';
-import { TaskInfo, getTaskInfo, assignTask, rejectTask } from '../Api/mainApi';
+import { TaskInfo, getTaskInfo, assignTask, rejectTask, deleteTask } from '../Api/mainApi';
 import { formatDeadline } from '../../utils/taskTreeUtils';
 
 interface CreateTaskModalProps {
@@ -252,6 +252,7 @@ interface ViewTaskModalProps {
   onCancel: () => void;
   onToggleCompletion?: () => void;
   onTaskAssigned?: () => void;
+  onTaskDeleted?: (taskId: string) => void;
   currentUser: User | null;
   isRootTask: boolean;
   areAllChildrenCompleted?: boolean;
@@ -263,6 +264,7 @@ export const ViewTaskModal = ({
   onCancel,
   onToggleCompletion,
   onTaskAssigned,
+    onTaskDeleted,
   currentUser,
   isRootTask,
   areAllChildrenCompleted = true
@@ -272,6 +274,7 @@ export const ViewTaskModal = ({
   const [error, setError] = React.useState<string>('');
   const [assigning, setAssigning] = React.useState<boolean>(false);
   const [rejecting, setRejecting] = React.useState<boolean>(false);
+    const [deleting, setDeleting] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     loadTaskInfo();
@@ -332,6 +335,34 @@ export const ViewTaskModal = ({
       setRejecting(false);
     }
   };
+
+    const handleDeleteTask = async () => {
+        if (!window.confirm('Вы уверены, что хотите удалить эту задачу?')) {
+            return;
+        }
+
+        try {
+            setDeleting(true);
+            setError('');
+
+            // Вызываем API для удаления задачи
+            await deleteTask(projectId, task.id);
+
+            // Вызываем callback для обновления родительского компонента
+            if (onTaskDeleted) {
+                onTaskDeleted(task.id);
+            }
+
+            // Закрываем модальное окно
+            onCancel();
+
+        } catch (err) {
+            console.error('Error deleting task:', err);
+            setError('Не удалось удалить задачу');
+        } finally {
+            setDeleting(false);
+        }
+    };
 
   const canToggleCompletion = currentUser &&
     (task.assigneeId === currentUser.username || !task.assigneeId);
@@ -486,6 +517,18 @@ export const ViewTaskModal = ({
             {rejecting ? 'Отказ...' : 'Отказаться от задачи'}
           </button>
         )}
+              <button
+                  className="delete-task-btn"
+                  onClick={handleDeleteTask}
+                  disabled={deleting}
+                  style={{
+                      backgroundColor: '#ff6b6b',
+                      color: 'white',
+                      marginLeft: '10px'
+                  }}
+              >
+                  {deleting ? 'Удаление...' : 'Удалить задачу'}
+              </button>
         <button className="cancel-btn" onClick={onCancel}>
           Закрыть
         </button>
