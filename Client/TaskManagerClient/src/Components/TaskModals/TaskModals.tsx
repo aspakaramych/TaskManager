@@ -300,10 +300,8 @@ export const ViewTaskModal = ({
       setError('');
       await assignTask(projectId, task.id);
 
-      // Обновить информацию о задаче
       await loadTaskInfo();
 
-      // Вызвать callback для обновления родительского компонента
       if (onTaskAssigned) {
         onTaskAssigned();
       }
@@ -321,10 +319,8 @@ export const ViewTaskModal = ({
       setError('');
       await rejectTask(projectId, task.id);
 
-      // Обновить информацию о задаче
       await loadTaskInfo();
 
-      // Вызвать callback для обновления родительского компонента
       if (onTaskAssigned) {
         onTaskAssigned();
       }
@@ -345,15 +341,12 @@ export const ViewTaskModal = ({
             setDeleting(true);
             setError('');
 
-            // Вызываем API для удаления задачи
             await deleteTask(projectId, task.id);
 
-            // Вызываем callback для обновления родительского компонента
             if (onTaskDeleted) {
                 onTaskDeleted(task.id);
             }
 
-            // Закрываем модальное окно
             onCancel();
 
         } catch (err) {
@@ -367,16 +360,12 @@ export const ViewTaskModal = ({
   const canToggleCompletion = currentUser &&
     (task.assigneeId === currentUser.username || !task.assigneeId);
 
-  // Проверяем, назначен ли текущий пользователь на задачу, используя список users из API
   const isAssignedToMe = currentUser && taskInfo?.users?.includes(currentUser.username);
 
-  // Проверяем, есть ли вообще ответственные у задачи
   const hasAssignees = taskInfo?.users && taskInfo.users.length > 0;
 
-  // Можно взять задачу, если она свободна (нет ответственных)
   const canAssignTask = currentUser && !hasAssignees && (!task.assigneeId);
 
-  // Можно отказаться, если я - ответственный
   const canRejectTask = isAssignedToMe || (currentUser && task.assigneeId === currentUser.username);
 
   const allChildrenCompleted = areAllChildrenCompleted;

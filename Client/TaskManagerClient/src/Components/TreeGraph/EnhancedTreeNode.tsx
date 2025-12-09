@@ -35,7 +35,6 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
 
     const isDone = task.progress === TaskProgress.Done;
 
-    // Inline стили для ноды
     const nodeStyles: React.CSSProperties = {
         position: 'relative',
         width: '280px',
@@ -64,7 +63,6 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
         })
     };
 
-    // Остальной код остается таким же, как у вас сейчас
     const getStatusStyles = () => {
         if (isDone) {
             return { background: '#2ed573', color: 'white' };
@@ -96,7 +94,6 @@ export const EnhancedTreeNode: React.FC<EnhancedTreeNodeProps> = ({
     const statusStyles = getStatusStyles();
     const priorityStyles = getPriorityStyles();
 
-    // Inline стили для внутренних элементов
     const headerStyles: React.CSSProperties = {
         display: 'flex',
         justifyContent: 'space-between',

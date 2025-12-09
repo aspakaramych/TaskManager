@@ -29,7 +29,7 @@ export const CreateProjectModal = ({
             </div>
             <div className="form-group">
                 <label>Описание проекта:</label> {/* Исправил label */}
-                <textarea // Лучше использовать textarea для описания
+                <textarea
                     value={newProject.description}
                     onChange={(e) => onNewProjectChange({...newProject, description: e.target.value})}
                     placeholder="Введите описание проекта"

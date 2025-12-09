@@ -1,6 +1,5 @@
 import { TaskResponse, TaskProgress } from '../types';
 
-// Helper to get all children recursively
 export const getAllDescendants = (taskId: string, tasks: TaskResponse[]): string[] => {
   const descendants: string[] = [];
   const stack = [taskId];
@@ -45,7 +44,6 @@ export const areAllChildrenCompleted = (taskId: string, tasks: TaskResponse[]): 
   return task.children.every(child => child.progress === TaskProgress.Done);
 };
 
-// Helper to flatten task tree
 export const flattenTasks = (tasks: TaskResponse[]): TaskResponse[] => {
   const result: TaskResponse[] = [];
 
@@ -60,7 +58,6 @@ export const flattenTasks = (tasks: TaskResponse[]): TaskResponse[] => {
   return result;
 };
 
-// Helper to find task by id in tree structure
 export const findTaskById = (taskId: string, tasks: TaskResponse[]): TaskResponse | null => {
   for (const task of tasks) {
     if (task.id === taskId) return task;
@@ -72,27 +69,22 @@ export const findTaskById = (taskId: string, tasks: TaskResponse[]): TaskRespons
   return null;
 };
 
-// Helper to get root level tasks (tasks without parent)
 export const getRootTasks = (tasks: TaskResponse[]): TaskResponse[] => {
   return tasks.filter(task => task.taskHeadId === null);
 };
 
-// Helper to check if task is done
 export const isTaskDone = (task: TaskResponse): boolean => {
   return task.progress === TaskProgress.Done;
 };
 
-// Helper to check if task is taken
 export const isTaskTaken = (task: TaskResponse): boolean => {
   return task.progress === TaskProgress.Taken;
 };
 
-// Helper to check if task is canceled
 export const isTaskCanceled = (task: TaskResponse): boolean => {
   return task.progress === TaskProgress.Canceled;
 };
 
-// Helper to format deadline
 export const formatDeadline = (deadline: Date): string => {
   const date = new Date(deadline);
   return date.toLocaleDateString('ru-RU', {
