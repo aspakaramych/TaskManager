@@ -336,11 +336,17 @@ export const ViewTaskModal = ({
   const canToggleCompletion = currentUser &&
     (task.assigneeId === currentUser.username || !task.assigneeId);
 
-  const canAssignTask = currentUser && !task.assigneeId;
+  // Проверяем, назначен ли текущий пользователь на задачу, используя список users из API
+  const isAssignedToMe = currentUser && taskInfo?.users?.includes(currentUser.username);
 
-  // Assuming currentUser.username matches assigneeId (id or username depending entirely on backend/frontend agreement)
-  // Reusing the same logic pattern as canToggleCompletion's check
-  const canRejectTask = currentUser && task.assigneeId === currentUser.username;
+  // Проверяем, есть ли вообще ответственные у задачи
+  const hasAssignees = taskInfo?.users && taskInfo.users.length > 0;
+
+  // Можно взять задачу, если она свободна (нет ответственных)
+  const canAssignTask = currentUser && !hasAssignees && (!task.assigneeId);
+
+  // Можно отказаться, если я - ответственный
+  const canRejectTask = isAssignedToMe || (currentUser && task.assigneeId === currentUser.username);
 
   const allChildrenCompleted = areAllChildrenCompleted;
   const isDone = task.progress === TaskProgress.Done;

@@ -195,6 +195,7 @@ public class TaskService : ITaskService
     {
         var pickedTask = await _pickedTaskRepository.GetByUserAndTaskAsync(userId, taskId);
         await _pickedTaskRepository.DeleteAsync(pickedTask);
+        await _pickedTaskRepository.SaveChangesAsync();
     }
 
     public async Task<TaskInfo> GetTaskInfo(Guid projectId, Guid taskId)
