@@ -16,7 +16,6 @@ const MainPage = () => {
         projects,
         loading: projectsLoading,
         createProject,
-        deleteProject,
         addTaskToProject,
         updateTaskInProject,
         deleteTaskFromProject,

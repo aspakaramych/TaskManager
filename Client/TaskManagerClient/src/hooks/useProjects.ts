@@ -101,11 +101,6 @@ export const useProjects = () => {
         }
     };
 
-    const deleteProject = (projectId: string) => {
-        // TODO: Implement API call for deleting project
-        setProjects(prev => prev.filter(project => project.id !== projectId));
-    };
-
     const updateProject = (projectId: string, updates: Partial<ProjectInfoDto>) => {
         // TODO: Implement API call for updating project
         setProjects(prev => prev.map(project =>
@@ -218,7 +213,6 @@ export const useProjects = () => {
         loading,
         error,
         createProject,
-        deleteProject,
         updateProject,
         addTaskToProject,
         updateTaskInProject,

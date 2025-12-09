@@ -402,6 +402,7 @@
 
 .detail-row span {
   flex: 1;
+    color: #2f3542
 }
 
 .status.completed {
@@ -720,6 +721,8 @@
 
 .detail-row span {
   flex: 1;
+    color: #2f3542
+
 }
 
 .status.completed {
