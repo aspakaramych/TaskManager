@@ -118,7 +118,8 @@ export const useProjects = () => {
             const taskCreateDto = {
                 Title: taskData.title,
                 Description: '',
-                Deadline: taskData.deadline
+                Deadline: taskData.deadline,
+                HeadTaskId: taskData.taskHeadId
             };
 
             await apiCreateTask(projectId, taskCreateDto);

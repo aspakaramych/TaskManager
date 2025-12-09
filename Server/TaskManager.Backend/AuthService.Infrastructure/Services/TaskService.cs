@@ -48,6 +48,7 @@ public class TaskService : ITaskService
             Description = task.Description,
             Title = task.Title,
             Progress = TaskProgress.Created,
+            TaskHeadId = task.HeadTaskId,
         };
         await _taskRepository.AddAsync(newTask);
         await _taskRepository.SaveChangesAsync();

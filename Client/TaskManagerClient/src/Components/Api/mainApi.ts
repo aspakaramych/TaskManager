@@ -63,6 +63,7 @@ export class TaskCreateDto {
     public Title: string = '';
     public Description: string | null = null;
     public Deadline: Date = new Date();
+    public HeadTaskId: string | null;
 }
 
 export interface ProjectInfoDto {
