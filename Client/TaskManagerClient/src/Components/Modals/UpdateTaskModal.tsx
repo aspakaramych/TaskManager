@@ -40,47 +40,20 @@ export const UpdateTaskModal = ({
             setLoading(true);
             setError('');
 
-            // Собираем ВСЕ измененные поля
-            const taskUpdateDto: any = {};
-
-            // Title - всегда отправляем если не пустое
-            if (updatedTask.title && updatedTask.title.trim() !== '') {
-                taskUpdateDto.title = updatedTask.title;
-            }
-
-            // Description - отправляем всегда (даже если пустое)
-            taskUpdateDto.description = updatedTask.description || null;
-
-            // Deadline - отправляем всегда
-            if (updatedTask.deadline) {
-                const date = updatedTask.deadline instanceof Date ?
-                    updatedTask.deadline :
-                    new Date(updatedTask.deadline);
-
-                if (!isNaN(date.getTime())) {
-                    taskUpdateDto.deadline = date.toISOString();
-                } else {
-                    taskUpdateDto.deadline = null;
-                }
-            } else {
-                taskUpdateDto.deadline = null;
-            }
-
-            // Progress - отправляем ВСЕГДА, текущее значение
-            taskUpdateDto.progress = updatedTask.progress || null;
-
-            // AssigneeId - отправляем если есть
-            if (updatedTask.assigneeId !== undefined) {
-                taskUpdateDto.assigneeId = updatedTask.assigneeId || null;
-            }
+            const taskUpdateDto = {
+                title: updatedTask.title,
+                description: updatedTask.description || null,
+                deadline: updatedTask.deadline instanceof Date ?
+                    updatedTask.deadline.toISOString() :
+                    updatedTask.deadline,
+                progress: updatedTask.progress, // Пробуй строку
+            };
 
             console.log('Отправляю данные:', taskUpdateDto);
 
-            // Отправляем на сервер
             await updateTask(taskUpdateDto, projectId, task.id);
 
-            // Обновляем локально и закрываем
-            onUpdate(updatedTask);
+            alert('✅ Задача обновлена!');
             onCancel();
 
         } catch (err: any) {

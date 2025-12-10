@@ -131,45 +131,42 @@ const MainPage = () => {
     const handleTaskUpdate = async (updatedTask: TaskResponse) => {
         if (selectedProject) {
             try {
-                // Подготавливаем данные для API
-                const taskUpdateDto = {
-                    title: updatedTask.title,
-                    description: updatedTask.description || '',
-                    deadline: updatedTask.deadline,
-                    progress: updatedTask.progress,
-                };
+                // Преобразуем deadline в ISO строку
+                let deadlineValue = null;
+                if (updatedTask.deadline) {
+                    const date = updatedTask.deadline instanceof Date ?
+                        updatedTask.deadline :
+                        new Date(updatedTask.deadline);
 
-                console.log('MainPage: Отправляю обновление', taskUpdateDto);
-
-                // 1. Вызываем API обновления
-                await updateTask(taskUpdateDto, selectedProject.id, updatedTask.id);
-
-                console.log('MainPage: API успешно обновил');
-
-                // 2. ОБНОВЛЯЕМ ПРОЕКТ
-                await refreshProject(selectedProject.id);
-
-                // 3. ОБНОВЛЯЕМ selectedProject
-                const freshProject = await getProjectInfo(selectedProject.id);
-                setSelectedProject(freshProject);
-
-                // 4. Обновляем editingTask если она открыта
-                if (editingTask && editingTask.id === updatedTask.id) {
-                    const flatTasks = flattenTasks(freshProject.tasks);
-                    const freshTask = flatTasks.find(t => t.id === updatedTask.id);
-                    if (freshTask) {
-                        setEditingTask(freshTask);
+                    if (!isNaN(date.getTime())) {
+                        deadlineValue = date.toISOString();
                     }
                 }
 
-                // 5. Закрываем модалку
+                const taskUpdateDto = {
+                    title: updatedTask.title,
+                    description: updatedTask.description || null,
+                    deadline: deadlineValue,
+                    progress: updatedTask.progress,
+                };
+
+                console.log('Отправляю:', taskUpdateDto);
+
+                await updateTask(taskUpdateDto, selectedProject.id, updatedTask.id);
+
+                alert('✅ Задача обновлена!');
                 setUpdatingTask(null);
+                setEditingTask(null);
 
-                console.log('MainPage: Все обновления завершены');
+                // Перезагрузить проект
+                setTimeout(async () => {
+                    const freshProject = await getProjectInfo(selectedProject.id);
+                    setSelectedProject(freshProject);
+                }, 300);
 
-            } catch (err) {
-                console.error('Failed to update task:', err);
-                alert('Не удалось обновить задачу');
+            } catch (err: any) {
+                console.error('Ошибка:', err);
+                alert('❌ Не удалось обновить: ' + err.message);
             }
         }
     };
