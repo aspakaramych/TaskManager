@@ -95,9 +95,10 @@ public class TaskService : ITaskService
         if (task.Deadline != null)        
             newTask.Deadline = (DateTime)task.Deadline;
         if (task.Progress != null)
-            newTask.Progress = (TaskProgress)task.Progress;
-        
-        
+            if (Enum.TryParse(task.Progress, out TaskProgress progress))
+            {
+                newTask.Progress = progress;
+            }
         await _taskRepository.UpdateAsync(newTask);
         await _taskRepository.SaveChangesAsync();
     }

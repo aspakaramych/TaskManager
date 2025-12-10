@@ -13,5 +13,5 @@ public class TaskUpdateDto
 
     public DateTime? Deadline { get; set; }
 
-    public TaskProgress? Progress { get; set; }
+    public string? Progress { get; set; }
 }

@@ -323,7 +323,7 @@ public class MainController : ControllerBase
     }
 
 
-    [HttpPut("project/{projectId}/task/{taskId}")]
+    [HttpPatch("project/{projectId}/task/{taskId}")]
     [Authorize]
     public async Task<IActionResult> UpdateTask(Guid projectId, Guid taskId, [FromBody] TaskUpdateDto taskUpdateDto)
     {
