@@ -9,7 +9,7 @@ import { CenterArea } from '../Components/CenterArea/CenterArea';
 import type { NewProjectData, NewTaskData, TaskResponse, ProjectInfoDto, User } from '../types';
 import './MainPage.css';
 import { flattenTasks } from '../utils/taskTreeUtils';
-import { deleteProject, getAllProjects, deleteTask, getProjectInfo } from '../Components/Api/mainApi';
+import { deleteProject, getAllProjects, deleteTask, getProjectInfo, updateTask } from '../Components/Api/mainApi';
 
 const MainPage = () => {
     const {
@@ -48,6 +48,7 @@ const MainPage = () => {
     });
     const [showLogin, setShowLogin] = useState(false);
     const [showUpdateProject, setShowUpdateProject] = useState(false);
+    const [updatingTask, setUpdatingTask] = useState<TaskResponse | null>(null);
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
@@ -124,6 +125,52 @@ const MainPage = () => {
         if (editingTask && selectedProject) {
             updateTaskInProject(selectedProject.id, editingTask.id, editingTask);
             setEditingTask(null);
+        }
+    };
+
+    const handleTaskUpdate = async (updatedTask: TaskResponse) => {
+        if (selectedProject) {
+            try {
+                // Подготавливаем данные для API
+                const taskUpdateDto = {
+                    title: updatedTask.title,
+                    description: updatedTask.description || '',
+                    deadline: updatedTask.deadline,
+                    progress: updatedTask.progress,
+                };
+
+                console.log('MainPage: Отправляю обновление', taskUpdateDto);
+
+                // 1. Вызываем API обновления
+                await updateTask(taskUpdateDto, selectedProject.id, updatedTask.id);
+
+                console.log('MainPage: API успешно обновил');
+
+                // 2. ОБНОВЛЯЕМ ПРОЕКТ
+                await refreshProject(selectedProject.id);
+
+                // 3. ОБНОВЛЯЕМ selectedProject
+                const freshProject = await getProjectInfo(selectedProject.id);
+                setSelectedProject(freshProject);
+
+                // 4. Обновляем editingTask если она открыта
+                if (editingTask && editingTask.id === updatedTask.id) {
+                    const flatTasks = flattenTasks(freshProject.tasks);
+                    const freshTask = flatTasks.find(t => t.id === updatedTask.id);
+                    if (freshTask) {
+                        setEditingTask(freshTask);
+                    }
+                }
+
+                // 5. Закрываем модалку
+                setUpdatingTask(null);
+
+                console.log('MainPage: Все обновления завершены');
+
+            } catch (err) {
+                console.error('Failed to update task:', err);
+                alert('Не удалось обновить задачу');
+            }
         }
     };
 
@@ -264,7 +311,10 @@ const MainPage = () => {
                         isProjectCreator={isProjectCreator}
                         currentUser={currentUser}
                         availableParents={getAvailableParents()}
-                        isRootTask={isRootTask(editingTask)}
+                        isRootTask={isRootTask}
+                        updatingTask={updatingTask}
+                        onUpdatingTaskChange={setUpdatingTask}
+                        onTaskUpdate={handleTaskUpdate}
                     />
                     <RightSidebar
                         selectedProject={selectedProject}

@@ -117,10 +117,10 @@ export interface UserResponse {
 }
 
 export interface TaskUpdateDto {
-    title?: string;
-    description?: string;
-    deadline?: Date;
-    progress?: TaskProgress;
+    title?: string | null;
+    description?: string | null;
+    deadline?: string | null; // ISO string
+    progress?: TaskProgress | null;
 }
 
 export interface ProjectUpdateDto {
@@ -338,25 +338,24 @@ export const rejectTask = async (projectId: string, taskId: string): Promise<voi
     }
 }
 
-export const updateTask = async (task: TaskUpdateDto, projectId: string, taskId: string): Promise<void> => {
+export const updateTask = async (task: any, projectId: string, taskId: string): Promise<void> => {
     try {
-        const response = await mainApi.put(`project/${projectId}/task/${taskId}`, task)
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            const status = error.response.status;
+        // ОБЯЗАТЕЛЬНО обернуть в taskUpdateDto
+        const requestData = {
+            taskUpdateDto: task
+        };
 
-            switch (status) {
-                case 400:
-                    throw new Error("Validation failed.");
-                case 401:
-                    throw new Error("Authentication failed.");
-                default:
-                    throw new Error(`Произошла сетевая ошибка. Статус: ${status}`);
-            }
-        }
+        console.log('Отправляю на сервер:', requestData);
+
+        const response = await mainApi.put(`project/${projectId}/task/${taskId}`, requestData);
+
+        console.log('Успех:', response.data);
+
+    } catch (error: any) {
+        console.error('Ошибка API:', error.response?.data);
         throw error;
     }
-}
+};
 
 export const deleteTask = async (projectId: string, taskId: string): Promise<void> => {
     try {

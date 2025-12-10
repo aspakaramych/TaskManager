@@ -256,6 +256,7 @@ interface ViewTaskModalProps {
   currentUser: User | null;
   isRootTask: boolean;
   areAllChildrenCompleted?: boolean;
+    onShowUpdateTask?: (task: TaskResponse) => void;
 }
 
 export const ViewTaskModal = ({
@@ -267,7 +268,8 @@ export const ViewTaskModal = ({
     onTaskDeleted,
   currentUser,
   isRootTask,
-  areAllChildrenCompleted = true
+  areAllChildrenCompleted = true,
+    onShowUpdateTask
 }: ViewTaskModalProps) => {
   const [taskInfo, setTaskInfo] = React.useState<TaskInfo | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -506,6 +508,18 @@ export const ViewTaskModal = ({
             {rejecting ? 'Отказ...' : 'Отказаться от задачи'}
           </button>
         )}
+          <button
+              className="update-btn"
+              onClick={() => onShowUpdateTask && onShowUpdateTask(task)}
+              style={{
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  marginLeft: '10px'
+              }}
+          >
+              Обновить задачу
+          </button>
+
               <button
                   className="delete-task-btn"
                   onClick={handleDeleteTask}
