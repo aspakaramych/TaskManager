@@ -1,0 +1,98 @@
+/* AddUserButton.css */
+
+.add-user-btn {
+    background: linear-gradient(135deg, #2ed573 0%, #26d0ce 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(46, 213, 115, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.add-user-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.add-user-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.add-user-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(46, 213, 115, 0.3);
+}
+
+.add-user-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(46, 213, 115, 0.2);
+}
+
+.add-user-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.add-user-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 6px rgba(46, 213, 115, 0.2);
+}
+
+/* Icon variant */
+.add-user-btn-icon {
+    background: linear-gradient(135deg, #2ed573 0%, #26d0ce 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(46, 213, 115, 0.2);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-user-btn-icon:hover {
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 6px 12px rgba(46, 213, 115, 0.3);
+}
+
+/* Compact variant */
+.add-user-btn-compact {
+    background: linear-gradient(135deg, #2ed573 0%, #26d0ce 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(46, 213, 115, 0.2);
+}
+
+.add-user-btn-compact:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(46, 213, 115, 0.3);
+}

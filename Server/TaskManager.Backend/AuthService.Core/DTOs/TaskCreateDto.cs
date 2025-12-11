@@ -13,4 +13,8 @@ public class TaskCreateDto
 
     [Required]
     public DateTime Deadline { get; set; }
+    
+    public Guid? HeadTaskId { get; set; }
+    
+    public Guid? UserId { get; set; }
 }

@@ -52,4 +52,9 @@ public class UserRepository : IUserRepository
         _appDbContext.Users.Remove(user);
         await _appDbContext.SaveChangesAsync();
     }
+    
+    public async Task<IEnumerable<User>> GetAllAsync()
+    {
+        return await _appDbContext.Users.ToListAsync();
+    }
 }

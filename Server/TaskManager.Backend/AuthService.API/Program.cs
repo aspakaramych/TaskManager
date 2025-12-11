@@ -35,6 +35,7 @@ builder.Services.AddScoped<ITechTaskRepository, TechTaskRepository>();
 builder.Services.AddScoped<ITechService, TechService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IPickedTaskRepository, PickedTaskRepository>();
+builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<JwtSettings>(provider =>
 {
     var settings = new JwtSettings();

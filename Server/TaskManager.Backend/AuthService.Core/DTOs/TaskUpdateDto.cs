@@ -5,9 +5,6 @@ namespace AuthService.Core.DTOs;
 
 public class TaskUpdateDto
 {
-    [Required]
-    public Guid Id { get; set; }
-
     [StringLength(200, MinimumLength = 1)]
     public string? Title { get; set; }
 
@@ -16,5 +13,5 @@ public class TaskUpdateDto
 
     public DateTime? Deadline { get; set; }
 
-    public TaskProgress? Progress { get; set; }
+    public string? Progress { get; set; }
 }

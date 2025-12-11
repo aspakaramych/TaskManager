@@ -1,0 +1,183 @@
+.tree-graph-container {
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-graph-container h3 {
+  margin-top: 0;
+  color: white;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.tree-controls {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tree-controls button {
+  padding: 0.5rem 1rem;
+  background: #3742fa;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.tree-controls button:hover {
+  background: #2f38e0;
+}
+
+.scale-info {
+  margin-left: auto;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.tree-info {
+  margin-bottom: 1rem;
+}
+
+.tree-info p {
+  margin: 0;
+  padding: 0.5rem;
+  background: #e3f2fd;
+  border-radius: 4px;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.tree-wrapper {
+  flex: 1;
+  /*border: 1px solid #1b2733;*/
+  border-radius: 6px;
+  background: #17212b;
+  position: relative;
+  min-height: 500px;
+}
+
+/* Стили для нод */
+.node-rect {
+  fill: #3742fa;
+  stroke: #2f38e0;
+  stroke-width: 2;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.node-rect:hover {
+  fill: #2f38e0;
+  stroke-width: 3;
+}
+
+.node-rect.completed {
+  fill: #2ed573;
+  stroke: #25c45d;
+}
+
+.node-rect.root-level {
+  fill: #ffa502;
+  stroke: #e59400;
+}
+
+.node-rect.empty {
+  fill: #95a5a6;
+  stroke: #7f8c8d;
+  cursor: default;
+}
+
+.node-rect.completed:hover {
+  fill: #25c45d;
+}
+
+.node-rect.root-level:hover {
+  fill: #e59400;
+}
+
+/* Текст в нодах */
+.node-title {
+  fill: white;
+  font-weight: bold;
+  font-size: 12px;
+  text-anchor: middle;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.node-info {
+  fill: white;
+  font-size: 10px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.node-status {
+  fill: white;
+  font-size: 10px;
+  text-anchor: middle;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.children-count {
+  fill: #666;
+  font-size: 9px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Кнопка раскрытия/скрытия */
+.node-toggle {
+  fill: white;
+  stroke: #3742fa;
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.node-toggle:hover {
+  fill: #f1f2f6;
+}
+
+/* Стили для связей между нодами */
+.link {
+  fill: none;
+  stroke: #999;
+  stroke-width: 2;
+}
+
+/* Анимации */
+.rst__tree {
+  transition: all 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .tree-controls {
+    flex-wrap: wrap;
+  }
+  
+  .tree-controls button {
+    flex: 1;
+    min-width: 100px;
+  }
+  
+  .scale-info {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+}
+
+.tree-header {
+    background: #17212b;
+}

@@ -1,0 +1,905 @@
+/* MainPage.css */
+.main-page {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.main-header {
+  width: 100%;
+  max-width: 1200px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  border-radius: 8px 8px 0 0;
+  margin-top: 1rem;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-greeting {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.login-btn, .logout-btn {
+  background: #3742fa;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.logout-btn {
+  background: #ff4757;
+}
+
+.logout-btn:hover {
+  background: #ff3742;
+}
+
+.login-btn:hover {
+  background: #2f38e0;
+}
+
+.block-container {
+  width: 1200px;
+  max-width: 1200px;
+  height: 800px;
+  background-color: #17212b;
+  margin: 0 auto 2rem auto;
+  border-radius: 0 0 8px 8px;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 250px;
+  height: 100%;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+/* Фиксируем ширину блоков */
+.left-sidebar, .right-sidebar {
+  min-width: 0; /* Позволяет блокам сжиматься */
+  width: 100%;
+}
+
+.center-area {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 280px 1fr 220px;
+  }
+  
+  .block-container {
+    height: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 0.5rem;
+  }
+  
+  .block-container {
+    height: auto;
+    min-height: 600px;
+  }
+  
+  .main-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Модальные окна */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #2f3542;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.users-selection {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.user-selection-item {
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: #f1f2f6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  border-left: 4px solid #3742fa;
+}
+
+.user-selection-item:hover {
+  background: #dfe4ea;
+}
+
+.participants-selection {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.participant-checkbox {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.participant-checkbox:last-child {
+  border-bottom: none;
+}
+
+.participant-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.participant-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Стили для левой панели */
+.left-sidebar {
+  background: #1b2733;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.project-item,
+.task-item {
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background: #17212b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid #3742fa;
+  position: relative;
+    color: white;
+}
+
+.task-item.completed {
+  background: #e8f5e8;
+  border-left-color: #2ed573;
+  opacity: 0.8;
+}
+
+.project-item:hover,
+.task-item:hover {
+  background: #666;
+  transform: translateX(2px);
+}
+
+.task-item.completed:hover {
+  background: #d4edda;
+}
+
+.creator-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #3742fa;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
+
+.task-status {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.back-btn {
+  background: #747d8c;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-weight: bold;
+}
+
+.create-project-btn {
+  background: #3742fa;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-weight: bold;
+}
+
+.create-task-btn {
+  background: #2ed573;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-weight: bold;
+}
+
+.no-projects, .login-prompt {
+  text-align: center;
+  color: #747d8c;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Стили центральной области */
+.center-area {
+  background: #1b2733;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.workspace h2 {
+  margin-top: 0;
+  color: white;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.creator-banner {
+  background: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: bold;
+  color: #1976d2;
+}
+
+.task-details {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.tasks-overview {
+  margin-top: 1rem;
+}
+
+.overview-stats {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  min-width: 100px;
+  flex: 1;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #3742fa;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.no-tasks {
+  text-align: center;
+  color: #747d8c;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Модальные окна задач */
+.task-modal {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 1rem;
+}
+
+.task-modal h3 {
+  margin-top: 0;
+  color: #2f3542;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.task-detail-view {
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.detail-row label {
+  font-weight: bold;
+  min-width: 150px;
+  color: #2f3542;
+}
+
+.detail-row span {
+  flex: 1;
+    color: #2f3542
+}
+
+.status.completed {
+  color: #2ed573;
+  font-weight: bold;
+}
+
+.status.in-progress {
+  color: #ffa502;
+  font-weight: bold;
+}
+
+.completion-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.completion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.completion-toggle input[type="checkbox"] {
+  margin: 0;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #2f3542;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+    width: 500px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.confirm-btn {
+  background: #3742fa;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 120px;
+}
+
+.delete-btn {
+  background: #ff4757;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 120px;
+}
+
+.cancel-btn {
+  background: #747d8c;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Стили правой панели */
+.right-sidebar {
+  background: #1b2733;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-y: auto;
+  position: relative;
+}
+
+.right-sidebar h3 {
+  margin-top: 0;
+  color: white;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.add-participant-btn {
+  background: #2ed573;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-weight: bold;
+}
+
+.add-participant-modal {
+  position: absolute;
+  top: 60px;
+  left: 1rem;
+  right: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.add-participant-modal h4 {
+  margin-top: 0;
+  color: #2f3542;
+}
+
+.users-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.user-item {
+  padding: 0.75rem;
+  margin: 0.25rem 0;
+  background: #f1f2f6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.user-item:hover {
+  background: #dfe4ea;
+}
+
+.close-modal-btn {
+  background: #747d8c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.participant-item {
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background:  #17212b;
+  border-radius: 4px;
+  border-left: 4px solid #3742fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-participant-btn {
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.remove-participant-btn:hover {
+  background: #ff3742;
+}
+
+.no-participants {
+  color: #747d8c;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+.current-user-note {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #e3f2fd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #1976d2;
+}
+
+.update-project-btn {
+    background: #cc8f00;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    width: 100%;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.update-project-btn:hover {
+    background: #eca100;
+}
+
+.delete-project-btn {
+  background: #ff4757;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: 100%;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.delete-project-btn:hover {
+  background: #ff3742;
+}
+
+/* Добавим в конец MainPage.css */
+
+/* Стили для чекбокса выполнения задачи */
+.completion-toggle {
+  margin: 1.5rem 0;
+}
+
+.completion-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+  color: #2f3542;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s;
+}
+
+.completion-toggle-label:hover {
+  background: #e9ecef;
+}
+
+.completion-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.completion-text {
+  font-size: 1rem;
+}
+
+.completion-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+/* Улучшенные стили для модальных окон задач */
+.task-modal {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 1rem;
+  max-width: 500px;
+  width: 100%;
+}
+
+.task-modal h3 {
+  margin-top: 0;
+  color: #2f3542;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.task-detail-view {
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.detail-row label {
+  font-weight: bold;
+  min-width: 150px;
+  color: #2f3542;
+}
+
+.detail-row span {
+  flex: 1;
+    color: #2f3542
+
+}
+
+.status.completed {
+  color: #2ed573;
+  font-weight: bold;
+}
+
+.status.in-progress {
+  color: #ffa502;
+  font-weight: bold;
+}
+
+/* Добавим в MainPage.css */
+
+/* Стили для древовидной структуры */
+.disabled-input {
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.completion-hint {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.completion-warning {
+  font-size: 0.8rem;
+  color: #ff4757;
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
+
+.requirement {
+  color: #ffa502;
+  font-style: italic;
+}
+
+.task-stats {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stat-item {
+  padding: 0.5rem;
+  background: white;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.project-tree-info {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #e3f2fd;
+  border-radius: 6px;
+  border-left: 4px solid #2196f3;
+}
+
+.project-tree-info h4 {
+  margin-top: 0;
+  color: #1976d2;
+}
+
+.project-tree-info p {
+  margin-bottom: 0;
+  color: #1565c0;
+}
+
+/* Стили для древовидного представления */
+.center-area .workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-view-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-wrapper {
+  flex: 1;
+  min-height: 0; /* Важно для правильного скроллинга */
+}
+
+/* Убедимся, что модальные окна поверх дерева */
+.task-modal {
+  position: relative;
+  z-index: 10;
+  background: white;
+}
+
+/* Стили для графа */
+.center-area .workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-graph-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Убедимся, что дерево занимает всю доступную высоту */
+.rd3t-tree-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .tree-graph-container {
+    padding: 0.5rem;
+  }
+  
+  .tree-controls {
+    flex-direction: column;
+  }
+}
+
+/* Стили для множественного дерева */
+.center-area .workspace {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.multi-tree-graph-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.trees-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Убедимся, что каждое дерево занимает правильную высоту */
+.single-tree-container {
+  height: 100%;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .trees-container {
+    flex-direction: column;
+  }
+}
+

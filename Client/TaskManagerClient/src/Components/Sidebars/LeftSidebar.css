@@ -1,0 +1,94 @@
+/* src/components/Sidebars/LeftSidebar.css */
+.tasks-tree {
+  margin-top: 1rem;
+}
+
+.task-item {
+  padding: 0.75rem;
+  margin: 0.25rem 0;
+  background: #17212b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid #3742fa;
+  position: relative;
+  /* Убираем фиксированную ширину, чтобы блок мог двигаться */
+  width: calc(100% - 20px); /* Компенсируем отступ */
+  box-sizing: border-box;
+    color: white;
+}
+
+.task-item:hover {
+  background: #666;
+  transform: translateX(2px);
+    color: #1b2533;
+}
+
+.task-item.completed {
+    background: #dfe4ea;
+    border-left-color: #2ed573;
+    opacity: 0.8;
+}
+
+.task-item.completed:hover {
+  background: #d4edda;
+}
+
+.task-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.task-item strong {
+  font-size: 0.9rem;
+}
+
+.task-item div {
+  font-size: 0.8rem;
+  color: white;
+}
+
+.task-status {
+  font-weight: bold;
+}
+
+.children-count {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  align-self: flex-start;
+}
+
+/* Убираем старые стили для псевдоэлементов */
+/* .task-item::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  width: 10px;
+  height: 1px;
+  background: #999;
+  transform: translateY(-50%);
+} */
+
+/* Добавим индикатор вложенности */
+.task-item.has-children {
+  position: relative;
+}
+
+.task-item.has-children::after {
+  content: '▼';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: #666;
+  transition: transform 0.3s;
+}
+
+.task-item.has-children.collapsed::after {
+  transform: translateY(-50%) rotate(-90deg);
+}

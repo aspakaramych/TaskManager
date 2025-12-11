@@ -16,14 +16,16 @@ public class MainController : ControllerBase
     private readonly IProjectService _projectService;
     private readonly ITechService _techService;
     private readonly ITaskService _taskService;
+    private readonly ITeamService _teamService;
     private readonly ILogger<MainController> _logger;
 
-    public MainController(ISubjectService subjectService, ILogger<MainController> logger, IProjectService projectService, ITechService techService, ITaskService taskService)
+    public MainController(ISubjectService subjectService, ILogger<MainController> logger, IProjectService projectService, ITechService techService, ITaskService taskService, ITeamService teamService)
     {
         _subjectService = subjectService;
         _projectService = projectService;
         _techService = techService;
         _taskService = taskService;
+        _teamService = teamService;
         _logger = logger;
     }
     
@@ -163,6 +165,201 @@ public class MainController : ControllerBase
             return Unauthorized(e.Message);
         }
         catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpPost("project/{projectId}/team")]
+    [Authorize]
+    public async Task<IActionResult> AddUserToTeam(Guid projectId, [FromBody] AddUserToTeamDto teamDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+        try
+        {
+            await _teamService.AddUserToTeam(teamDto.TeamId, teamDto.UserId, reqUserId, teamDto.Role);
+            return Ok();
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest();
+        }
+    }
+
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _teamService.GetAllUsers();
+        return Ok(users);
+    }
+    
+    [HttpGet("project/{projectId}")]
+    public async Task<IActionResult> GetAllProjectInfo(Guid projectId)
+    {
+        var project = await _projectService.GetProjectInfo(projectId);
+        return Ok(project);
+    }
+
+    [HttpPatch("project/{projectId}/task/connect")]
+    [Authorize]
+    public async Task<IActionResult> ConnectTask(Guid projectId, [FromBody] TaskConnect request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.ConnectTask(projectId, reqUserId, request);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+        
+    }
+    
+    [HttpGet("project/{projectId}/task/{taskId}")]
+    public async Task<IActionResult> GetTaskInfo(Guid projectId, Guid taskId)
+    {
+        var task = await _taskService.GetTaskInfo(projectId, taskId);
+        return Ok(task);
+    }
+
+    [HttpGet("project/{projectId}/task/{taskId}/assign")]
+    [Authorize]
+    public async Task<IActionResult> AssignTask(Guid projectId, Guid taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.AssignTask(taskId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500);
+        }
+    }
+    [HttpDelete("project/{projectId}/task/{taskId}/assign")]
+    [Authorize]
+    public async Task<IActionResult> RejectTask(Guid projectId, Guid taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _taskService.RejectTask(taskId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500);
+        }
+    }
+
+    [HttpPut("project/{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProject(Guid projectId, [FromBody] ProjectUpdateDto projectUpdateDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _projectService.UpdateProject(projectUpdateDto, reqUserId, projectId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpDelete("project/{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteProject(Guid projectId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            await _projectService.DeleteProject(projectId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+
+    [HttpPatch("project/{projectId}/task/{taskId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateTask(Guid projectId, Guid taskId, [FromBody] TaskUpdateDto taskUpdateDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+        try
+        {
+            await _taskService.UpdateTask(taskUpdateDto, projectId, taskId, reqUserId);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpDelete("project/{projectId}/task/{taskId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteTask(Guid projectId, Guid taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                          User.FindFirst(JwtRegisteredClaimNames.Sub);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var reqUserId))
+        {
+            return Unauthorized();
+        }
+        try
+        {
+            await _taskService.DeleteTask(taskId, reqUserId, projectId);
+            return Ok();
+        }
+        catch (Exception e)
         {
             return BadRequest(e.Message);
         }

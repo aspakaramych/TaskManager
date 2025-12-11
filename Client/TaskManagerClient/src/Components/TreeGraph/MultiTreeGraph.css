@@ -1,0 +1,195 @@
+.multi-tree-graph-container {
+  padding: 1rem;
+  background: #17212b;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.multi-tree-graph-container h3 {
+  margin-top: 0;
+  color: white;
+  border-bottom: 2px solid #3742fa;
+  padding-bottom: 0.5rem;
+}
+
+.global-stats {
+  background: #1b2533;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #e3eaf1;
+  text-align: center;
+}
+
+.trees-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.single-tree-container {
+  display: flex;
+  flex-direction: column;
+  min-width: 500px; /* Увеличили минимальную ширину */
+  flex: 1;
+  border: 1px solid #17212b;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #1b2733;
+}
+
+.tree-header {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.tree-header h4 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+  font-size: 1rem;
+  padding: 0.5rem;
+  background: #17212b;
+  border-radius: 4px;
+  border-left: 4px solid #3742fa;
+}
+
+.tree-stats {
+  font-size: 0.8rem;
+  color: white;
+  background: #17212b;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.tree-wrapper {
+  flex: 1;
+  min-height: 500px; /* Увеличили минимальную высоту */
+  position: relative;
+  background: #17212b;
+  border-radius: 6px;
+}
+
+.tree-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.tree-controls button {
+  padding: 0.25rem 0.5rem;
+  background: #3742fa;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  min-width: 30px;
+  transition: background 0.2s ease;
+}
+
+.tree-controls button:hover {
+  background: #2f38e0;
+}
+
+.scale-info {
+  margin-left: 0.5rem;
+  color: #666;
+  font-size: 0.8rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.no-tasks-message {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+/* Стили для связей между узлами */
+.link {
+  fill: none;
+  stroke: #95a5a6;
+  stroke-width: 2;
+  opacity: 0.6;
+}
+
+/* Стили для разных деревьев */
+.single-tree-container.tree-0 .tree-header h4 {
+  border-left-color: #3742fa;
+}
+
+.single-tree-container.tree-1 .tree-header h4 {
+  border-left-color: #ffa502;
+}
+
+.single-tree-container.tree-2 .tree-header h4 {
+  border-left-color: #2ed573;
+}
+
+.single-tree-container.tree-3 .tree-header h4 {
+  border-left-color: #ff4757;
+}
+
+.single-tree-container.tree-4 .tree-header h4 {
+  border-left-color: #a55eea;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .trees-container {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  
+  .single-tree-container {
+    min-width: calc(50% - 1rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .trees-container {
+    flex-direction: column;
+  }
+  
+  .single-tree-container {
+    min-width: 100%;
+  }
+  
+  .multi-tree-graph-container {
+    padding: 0.5rem;
+  }
+  
+  .tree-wrapper {
+    min-height: 400px;
+  }
+}
+
+/* Стили для react-d3-tree контейнера */
+.rd3t-tree-container {
+  width: 100%;
+  height: 100%;
+}
+
+.rd3t-g-node {
+  cursor: pointer;
+}
+
+/* Улучшаем отображение foreignObject */
+foreignObject {
+  overflow: visible;
+}
