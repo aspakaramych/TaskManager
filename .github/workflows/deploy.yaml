@@ -14,29 +14,56 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker
+      - name: Setup Docker with Compose
         uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Compose
+      - name: Install Docker Compose Plugin
         run: |
-          # Устанавливаем Docker Compose как Docker plugin
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          # Устанавливаем Docker Compose как плагин (docker compose с пробелом)
+          mkdir -p ~/.docker/cli-plugins
+          curl -sSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
           chmod +x ~/.docker/cli-plugins/docker-compose
+          
+          # Добавляем в PATH для удобства
+          echo "$HOME/.docker/cli-plugins" >> $GITHUB_PATH
           
           # Проверяем установку
           docker compose version
 
       - name: Build with Docker Compose
-        run: docker compose build
+        run: |
+          docker compose version
+          docker compose build
 
       - name: Test services start correctly
         run: |
+          # Запускаем контейнеры
           docker compose up -d
+          
+          # Ждем запуска
           sleep 30
+          
+          # Проверяем статус
           docker compose ps
-          curl -f http://localhost:15378/health || echo "Backend health check failed"
-          curl -f http://localhost:14000 || echo "Frontend check failed"
+          
+          # Считаем запущенные контейнеры
+          RUNNING_COUNT=$(docker compose ps --services --filter "status=running" | wc -l)
+          echo "Running services: $RUNNING_COUNT"
+          
+          if [ $RUNNING_COUNT -lt 2 ]; then
+            echo "❌ Not all services are running"
+            docker compose logs
+            exit 1
+          fi
+          
+          # Проверяем health endpoints
+          echo "Testing backend health..."
+          curl -f http://localhost:15378/health || echo "⚠️ Backend health check failed (but container is running)"
+          
+          echo "Testing frontend..."
+          curl -f http://localhost:14000 || echo "⚠️ Frontend check failed (but container is running)"
+          
+          # Останавливаем
           docker compose down
 
   deploy:
@@ -63,16 +90,26 @@ jobs:
             git pull origin main
             
             echo "Stopping old containers..."
-            docker-compose down
+            
+            # Проверяем какая команда доступна на сервере
+            if command -v docker-compose &> /dev/null; then
+              echo "Using docker-compose (with hyphen)"
+              COMPOSE_CMD="docker-compose"
+            else
+              echo "Using docker compose (with space)"
+              COMPOSE_CMD="docker compose"
+            fi
+            
+            $COMPOSE_CMD down
             
             echo "Building new containers..."
-            docker-compose build --no-cache
+            $COMPOSE_CMD build --no-cache
             
             echo "Starting containers..."
-            docker-compose up -d
+            $COMPOSE_CMD up -d
             
             echo "Cleaning up..."
             docker system prune -f
             
             echo "✅ Deployment completed!"
-            docker-compose ps
+            $COMPOSE_CMD ps
