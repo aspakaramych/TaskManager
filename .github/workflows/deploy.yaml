@@ -19,9 +19,6 @@ jobs:
 
       - name: Create .env file from secrets
         run: |
-          # Создаем .env файл с переменными окружения
-          cat > .env << EOF
-          # Database
           DB_NAME=${{ secrets.DB_NAME || 'taskmanager' }}
           DB_USER=${{ secrets.DB_USER || 'postgres' }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
@@ -30,11 +27,7 @@ jobs:
           # PgAdmin
           PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL || 'admin@example.com' }}
           PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
-          
-          
-          # Проверяем созданный файл (маскируя секреты)
-          echo "Created .env file (values hidden):"
-          cat .env | sed 's/=.*/=***/g'
+
 
       - name: Build with Docker Compose
         run: docker compose build
