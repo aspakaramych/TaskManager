@@ -3,6 +3,8 @@ name: Build, Test and Deploy
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build-and-test:
@@ -17,40 +19,39 @@ jobs:
         with:
           install-compose: true
 
-      - name: Create .env file from secrets
-        run: |
-          DB_NAME=${{ secrets.DB_NAME || 'taskmanager' }}
-          DB_USER=${{ secrets.DB_USER || 'postgres' }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING || 'Host=db;Port=5432;Database=taskmanager;Username=postgres;Password=${DB_PASSWORD}' }}
-          
-          # PgAdmin
-          PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL || 'admin@example.com' }}
-          PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
-
-
       - name: Build with Docker Compose
         run: docker compose build
 
       - name: Test services start correctly
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
         run: |
-          # Запускаем контейнеры с .env файлом
+          # Запускаем контейнеры
           docker compose up -d
+          
+          # Ждем запуска
           sleep 30
           
           # Проверяем статус
           docker compose ps
           
-          # Проверяем логи бэкенда (чтобы увидеть переменные)
-          echo "Checking backend logs for DB connection..."
-          docker compose logs auth --tail=20
+          # Проверяем что оба сервиса запущены
+          RUNNING_COUNT=$(docker compose ps | grep "Up" | wc -l)
+          echo "Running containers: $RUNNING_COUNT"
+          
+          if [ $RUNNING_COUNT -lt 2 ]; then
+            echo "❌ Not all services are running"
+            docker compose logs
+            exit 1
+          fi
           
           # Проверяем health endpoints
-          echo "Testing backend..."
-          curl -f http://localhost:15378/health || echo "Backend health check failed"
+          echo "Testing backend health..."
+          curl -f http://localhost:15378/health || echo "⚠️ Backend health check failed"
           
           echo "Testing frontend..."
-          curl -f http://localhost:14000 || echo "Frontend check failed"
+          curl -f http://localhost:14000 || echo "⚠️ Frontend check failed"
           
           docker compose down
 
@@ -70,50 +71,26 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
-          envs: |
-            DB_NAME
-            DB_PASSWORD
-            BACKEND_SECRET_KEY
           script: |
             echo "🚀 Starting deployment..."
             cd ${{ secrets.SERVER_PATH }}
-            
-            # Создаем .env файл на сервере
-            cat > .env << EOF
-            # Database
-            DB_NAME=${{ secrets.DB_NAME || 'taskmanager' }}
-            DB_USER=${{ secrets.DB_USER || 'postgres' }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_CONNECTION_STRING=Host=db;Port=5432;Database=$${DB_NAME};Username=$${DB_USER};Password=$${DB_PASSWORD}
-            
-            # PgAdmin
-            PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL || 'admin@example.com' }}
-            PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
-            
-            # Backend
-            BACKEND_SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}
-            
-            # Frontend
-            FRONTEND_API_URL=${{ secrets.FRONTEND_API_URL || 'http://localhost:15378' }}
-            EOF
             
             echo "Pulling latest code..."
             git pull origin main
             
             echo "Stopping old containers..."
-            docker compose down
+            docker-compose down
             
             echo "Building new containers..."
-            docker compose build --no-cache
+            docker-compose build --no-cache
             
             echo "Starting containers..."
-            docker compose up -d
+            POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
+            PGADMIN_PASSWORD="${{ secrets.PGADMIN_PASSWORD }}" \
+            docker-compose up -d
             
-            echo "Checking containers..."
-            sleep 10
-            docker compose ps
-            
-            echo "Checking backend logs..."
-            docker compose logs auth --tail=10
+            echo "Cleaning up..."
+            docker system prune -f
             
             echo "✅ Deployment completed!"
+            docker-compose ps
