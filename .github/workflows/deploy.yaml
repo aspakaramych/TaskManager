@@ -19,7 +19,6 @@ jobs:
 
       - name: Install Docker Compose Plugin
         run: |
-          # Устанавливаем Docker Compose как плагин (docker compose с пробелом)
           mkdir -p ~/.docker/cli-plugins
           curl -sSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
           chmod +x ~/.docker/cli-plugins/docker-compose
