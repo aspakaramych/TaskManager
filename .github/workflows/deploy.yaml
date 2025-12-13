@@ -2,9 +2,15 @@ name: Build, Test and Deploy
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+
+env:
+  # Общие переменные окружения для всех jobs
+  COMPOSE_PROJECT_NAME: app-ci-${{ github.run_id }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
 
 jobs:
   build-and-test:
@@ -16,42 +22,66 @@ jobs:
 
       - name: Setup Docker
         uses: docker/setup-buildx-action@v3
-        with:
-          install-compose: true
+
+      - name: Setup Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-v1 || sudo apt-get install -y docker-compose
 
       - name: Build with Docker Compose
         run: docker compose build
 
       - name: Test services start correctly
-        env:
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
         run: |
-          # Запускаем контейнеры
+          # Запускаем контейнеры с переменными окружения
           docker compose up -d
           
-          # Ждем запуска
-          sleep 30
+          # Ждем запуска с проверкой готовности
+          echo "Waiting for services to start..."
+          timeout 60 bash -c 'until docker compose ps | grep -q "Up"; do sleep 2; done'
+          
+          # Дополнительная пауза для полного запуска
+          sleep 10
           
           # Проверяем статус
+          echo "Container status:"
           docker compose ps
           
           # Проверяем что оба сервиса запущены
-          RUNNING_COUNT=$(docker compose ps | grep "Up" | wc -l)
-          echo "Running containers: $RUNNING_COUNT"
+          RUNNING_COUNT=$(docker compose ps --services | xargs -I {} sh -c 'docker compose ps {} | grep -q "Up" && echo 1' | wc -l)
+          SERVICE_COUNT=$(docker compose ps --services | wc -l)
+          echo "Running containers: $RUNNING_COUNT/$SERVICE_COUNT"
           
-          if [ $RUNNING_COUNT -lt 2 ]; then
+          if [ $RUNNING_COUNT -lt $SERVICE_COUNT ]; then
             echo "❌ Not all services are running"
             docker compose logs
             exit 1
           fi
           
-          # Проверяем health endpoints
+          # Проверяем health endpoints с повторными попытками
           echo "Testing backend health..."
-          curl -f http://localhost:15378/health || echo "⚠️ Backend health check failed"
+          max_attempts=5
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:15378/health 2>/dev/null; then
+              echo "✅ Backend is healthy"
+              break
+            fi
+            echo "Attempt $attempt failed, retrying..."
+            sleep 5
+            attempt=$((attempt + 1))
+          done
+          
+          if [ $attempt -gt $max_attempts ]; then
+            echo "⚠️ Backend health check failed after $max_attempts attempts"
+          fi
           
           echo "Testing frontend..."
-          curl -f http://localhost:14000 || echo "⚠️ Frontend check failed"
+          if curl -f http://localhost:14000 2>/dev/null; then
+            echo "✅ Frontend is accessible"
+          else
+            echo "⚠️ Frontend check failed"
+          fi
           
           docker compose down
 
@@ -71,11 +101,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
-          # 💡 Добавьте этот блок для безопасной передачи секретов
-          env:
-            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-            PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
-          # 💡 Измените скрипт, чтобы использовать переданные переменные среды
+          script_stop: true
           script: |
             echo "🚀 Starting deployment..."
             cd ${{ secrets.SERVER_PATH }}
@@ -84,19 +110,27 @@ jobs:
             git pull origin main
             
             echo "Stopping old containers..."
-            docker-compose down
+            docker-compose down || true
+            
+            echo "Creating .env file from secrets..."
+            # Создаем .env файл на сервере с секретами
+            cat > .env << EOF
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
+            EOF
+            
+            # Устанавливаем права доступа
+            chmod 600 .env
             
             echo "Building new containers..."
             docker-compose build --no-cache
             
             echo "Starting containers..."
-            # Используем $POSTGRES_PASSWORD и $PGADMIN_PASSWORD, переданные через `env:` выше
-            POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-            PGADMIN_PASSWORD="$PGADMIN_PASSWORD" \
             docker-compose up -d
             
             echo "Cleaning up..."
-            docker system prune -f
+            docker system prune -f --volumes
             
             echo "✅ Deployment completed!"
+            echo "Container status:"
             docker-compose ps
