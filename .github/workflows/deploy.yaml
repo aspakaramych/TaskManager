@@ -9,11 +9,104 @@ on:
 env:
   # Общие переменные окружения для всех jobs
   COMPOSE_PROJECT_NAME: app-ci-${{ github.run_id }}
-  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
 
 jobs:
+  verify-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      all_secrets_set: ${{ steps.check-secrets.outputs.all_set }}
+
+    steps:
+      - name: Check all required secrets are set
+        id: check-secrets
+        run: |
+          ALL_SET="true"
+          
+          # Проверяем все необходимые секреты
+          if [ -z "${{ secrets.DB_CONNECTION_STRING }}" ]; then
+            echo "❌ DB_CONNECTION_STRING is not set"
+            ALL_SET="false"
+          else
+            echo "✅ DB_CONNECTION_STRING is set"
+          fi
+          
+          if [ -z "${{ secrets.DB_NAME }}" ]; then
+            echo "❌ DB_NAME is not set"
+            ALL_SET="false"
+          else
+            echo "✅ DB_NAME is set"
+          fi
+          
+          if [ -z "${{ secrets.DB_USER }}" ]; then
+            echo "❌ DB_USER is not set"
+            ALL_SET="false"
+          else
+            echo "✅ DB_USER is set"
+          fi
+          
+          if [ -z "${{ secrets.DB_PASSWORD }}" ]; then
+            echo "❌ DB_PASSWORD is not set"
+            ALL_SET="false"
+          else
+            echo "✅ DB_PASSWORD is set"
+          fi
+          
+          if [ -z "${{ secrets.PGADMIN_EMAIL }}" ]; then
+            echo "❌ PGADMIN_EMAIL is not set"
+            ALL_SET="false"
+          else
+            echo "✅ PGADMIN_EMAIL is set"
+          fi
+          
+          if [ -z "${{ secrets.PGADMIN_PASSWORD }}" ]; then
+            echo "❌ PGADMIN_PASSWORD is not set"
+            ALL_SET="false"
+          else
+            echo "✅ PGADMIN_PASSWORD is set"
+          fi
+          
+          if [ -z "${{ secrets.SERVER_HOST }}" ]; then
+            echo "❌ SERVER_HOST is not set"
+            ALL_SET="false"
+          else
+            echo "✅ SERVER_HOST is set"
+          fi
+          
+          if [ -z "${{ secrets.SERVER_USER }}" ]; then
+            echo "❌ SERVER_USER is not set"
+            ALL_SET="false"
+          else
+            echo "✅ SERVER_USER is set"
+          fi
+          
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "❌ SSH_PRIVATE_KEY is not set"
+            ALL_SET="false"
+          else
+            echo "✅ SSH_PRIVATE_KEY is set"
+          fi
+          
+          echo "all_set=$ALL_SET" >> $GITHUB_OUTPUT
+
+      - name: Test SSH connection (if secrets are set)
+        if: steps.check-secrets.outputs.all_set == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script: |
+            echo "✅ SSH connection test successful!"
+            echo "Server: $(hostname)"
+            echo "User: $(whoami)"
+            echo "Date: $(date)"
+
   build-and-test:
+    needs: verify-secrets
+    if: needs.verify-secrets.outputs.all_secrets_set == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,73 +121,96 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose-v1 || sudo apt-get install -y docker-compose
 
+      - name: Create .env file for testing
+        run: |
+          cat > .env << EOF
+          # Database configuration
+          DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          
+          # PgAdmin configuration
+          PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}
+          PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
+          
+          # Application ports
+          BACKEND_PORT=15378
+          FRONTEND_PORT=14000
+          POSTGRES_PORT=5432
+          PGADMIN_PORT=5050
+          EOF
+          
+          echo "✅ Created .env file for testing"
+          echo "File content (secrets masked):"
+          sed 's/=.*/=***/' .env
+
       - name: Build with Docker Compose
         run: docker compose build
 
       - name: Test services start correctly
         run: |
-          # Запускаем контейнеры с переменными окружения
+          # Запускаем контейнеры
+          echo "Starting containers..."
           docker compose up -d
           
-          # Ждем запуска с проверкой готовности
+          # Ждем запуска
           echo "Waiting for services to start..."
-          timeout 60 bash -c 'until docker compose ps | grep -q "Up"; do sleep 2; done'
-          
-          # Дополнительная пауза для полного запуска
-          sleep 10
+          sleep 30
           
           # Проверяем статус
           echo "Container status:"
           docker compose ps
           
-          # Проверяем что оба сервиса запущены
-          RUNNING_COUNT=$(docker compose ps --services | xargs -I {} sh -c 'docker compose ps {} | grep -q "Up" && echo 1' | wc -l)
-          SERVICE_COUNT=$(docker compose ps --services | wc -l)
-          echo "Running containers: $RUNNING_COUNT/$SERVICE_COUNT"
+          # Проверяем что сервисы запущены
+          SERVICES=$(docker compose ps --services)
+          echo "Services: $SERVICES"
           
-          if [ $RUNNING_COUNT -lt $SERVICE_COUNT ]; then
-            echo "❌ Not all services are running"
-            docker compose logs
-            exit 1
-          fi
-          
-          # Проверяем health endpoints с повторными попытками
-          echo "Testing backend health..."
-          max_attempts=5
-          attempt=1
-          while [ $attempt -le $max_attempts ]; do
-            if curl -f http://localhost:15378/health 2>/dev/null; then
-              echo "✅ Backend is healthy"
-              break
+          for service in $SERVICES; do
+            if docker compose ps $service | grep -q "Up"; then
+              echo "✅ $service is running"
+            else
+              echo "❌ $service is NOT running"
+              docker compose logs $service
             fi
-            echo "Attempt $attempt failed, retrying..."
-            sleep 5
-            attempt=$((attempt + 1))
           done
           
-          if [ $attempt -gt $max_attempts ]; then
-            echo "⚠️ Backend health check failed after $max_attempts attempts"
+          # Проверяем health endpoints
+          echo "Testing application health..."
+          
+          # Проверяем бэкенд
+          if curl -s -f http://localhost:15378/health > /dev/null 2>&1; then
+            echo "✅ Backend is healthy"
+          else
+            echo "⚠️ Backend health check failed"
+            docker compose logs backend || true
           fi
           
-          echo "Testing frontend..."
-          if curl -f http://localhost:14000 2>/dev/null; then
+          # Проверяем фронтенд
+          if curl -s -f http://localhost:14000 > /dev/null 2>&1; then
             echo "✅ Frontend is accessible"
           else
             echo "⚠️ Frontend check failed"
+            docker compose logs frontend || true
           fi
           
+          # Останавливаем контейнеры
           docker compose down
+          echo "✅ Test completed"
 
   deploy:
-    needs: build-and-test
+    needs: [verify-secrets, build-and-test]
+    if: |
+      needs.verify-secrets.outputs.all_secrets_set == 'true' &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to server using SSH
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -104,33 +220,80 @@ jobs:
           script_stop: true
           script: |
             echo "🚀 Starting deployment..."
+            
+            # Переходим в рабочую директорию
             cd ${{ secrets.SERVER_PATH }}
             
+            # Обновляем код
             echo "Pulling latest code..."
             git pull origin main
             
+            # Останавливаем старые контейнеры
             echo "Stopping old containers..."
-            docker-compose down || true
+            docker-compose down || echo "No running containers found"
             
-            echo "Creating .env file from secrets..."
-            # Создаем .env файл на сервере с секретами
-            cat > .env << EOF
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            # Создаем .env файл с секретами
+            echo "Creating .env file..."
+            cat > .env << 'EOF'
+            # Database configuration
+            DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            
+            # PgAdmin configuration
+            PGADMIN_EMAIL=${{ secrets.PGADMIN_EMAIL }}
             PGADMIN_PASSWORD=${{ secrets.PGADMIN_PASSWORD }}
             EOF
             
-            # Устанавливаем права доступа
+            # Устанавливаем безопасные права
             chmod 600 .env
             
+            echo "Environment variables set:"
+            echo "DB_CONNECTION_STRING: $(echo ${{ secrets.DB_CONNECTION_STRING }} | cut -c1-10)..."
+            echo "DB_NAME: ${{ secrets.DB_NAME }}"
+            echo "DB_USER: ${{ secrets.DB_USER }}"
+            echo "DB_PASSWORD: ***"
+            echo "PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}"
+            echo "PGADMIN_PASSWORD: ***"
+            
+            # Собираем контейнеры
             echo "Building new containers..."
             docker-compose build --no-cache
             
+            # Запускаем контейнеры
             echo "Starting containers..."
             docker-compose up -d
             
-            echo "Cleaning up..."
-            docker system prune -f --volumes
+            # Ждем запуска
+            echo "Waiting for services to start..."
+            sleep 20
             
-            echo "✅ Deployment completed!"
+            # Проверяем статус
             echo "Container status:"
             docker-compose ps
+            
+            # Проверяем здоровье сервисов
+            echo "Checking service health..."
+            
+            # Проверяем бэкенд
+            if curl -s -f http://localhost:15378/health > /dev/null; then
+              echo "✅ Backend is healthy"
+            else
+              echo "⚠️ Backend health check failed"
+              docker-compose logs backend --tail=50
+            fi
+            
+            # Проверяем фронтенд
+            if curl -s -f http://localhost:14000 > /dev/null; then
+              echo "✅ Frontend is accessible"
+            else
+              echo "⚠️ Frontend check failed"
+              docker-compose logs frontend --tail=50
+            fi
+            
+            # Очистка
+            echo "Cleaning up old Docker resources..."
+            docker system prune -f --volumes || true
+            
+            echo "✅ Deployment completed successfully!"
