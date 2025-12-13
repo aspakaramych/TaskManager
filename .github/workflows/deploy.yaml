@@ -71,6 +71,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
+          # 💡 Добавьте этот блок для безопасной передачи секретов
+          env:
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+          # 💡 Измените скрипт, чтобы использовать переданные переменные среды
           script: |
             echo "🚀 Starting deployment..."
             cd ${{ secrets.SERVER_PATH }}
@@ -85,8 +90,9 @@ jobs:
             docker-compose build --no-cache
             
             echo "Starting containers..."
-            POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
-            PGADMIN_PASSWORD="${{ secrets.PGADMIN_PASSWORD }}" \
+            # Используем $POSTGRES_PASSWORD и $PGADMIN_PASSWORD, переданные через `env:` выше
+            POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+            PGADMIN_PASSWORD="$PGADMIN_PASSWORD" \
             docker-compose up -d
             
             echo "Cleaning up..."
