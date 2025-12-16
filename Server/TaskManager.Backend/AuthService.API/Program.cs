@@ -64,9 +64,9 @@ builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("AllowClient", policy =>
     {
-        policy.WithOrigins("http://0.0.0.0:14000")
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 builder.Services.AddAuthorization(opt =>
