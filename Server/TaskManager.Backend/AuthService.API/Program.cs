@@ -68,7 +68,8 @@ builder.Services.AddCors(opt =>
                                    "http://127.0.0.1:14000",
                                    "http://client:5173",
                                    "http://client:5173",
-                                    "http://client:14000")
+                                    "http://client:14000",
+                                    "http://213.171.24.172:14000")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
