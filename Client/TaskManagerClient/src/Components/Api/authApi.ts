@@ -58,7 +58,7 @@ export const apiRegister = async (data: RegisterRequest): Promise<LoginResponse>
 
             switch (status) {
                 case 400:
-                    const detail400 = (error.response.data as any).detail || "Validation failed.";
+                    const detail400 = Object.values(error.response.data.errors)[0]?.[0] || "Validation failed.";
                     throw new Error(detail400);
                 case 409:
                     throw new Error("Пользователь с такой почтой или именем уже зарегистрирован.");
