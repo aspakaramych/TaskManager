@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useProjects } from '../hooks/useProjects';
 import { useAuth } from '../hooks/useAuth';
@@ -131,7 +132,6 @@ const MainPage = () => {
     const handleTaskUpdate = async (updatedTask: TaskResponse) => {
         if (selectedProject) {
             try {
-                // Преобразуем deadline в ISO строку
                 let deadlineValue = null;
                 if (updatedTask.deadline) {
                     const date = updatedTask.deadline instanceof Date ?
@@ -150,7 +150,28 @@ const MainPage = () => {
                     progress: updatedTask.progress,
                 };
 
-                console.log('Отправляю:', taskUpdateDto);
+                console.log('===== ПЕРЕД ОБНОВЛЕНИЕМ =====');
+                console.log('ID обновляемой задачи:', updatedTask.id);
+                console.log('ID проекта:', selectedProject.id);
+
+                // Логируем текущие задачи до обновления
+                console.log('Текущие задачи в проекте ДО обновления:');
+                const logTasks = (tasks: TaskResponse[], level = 0) => {
+                    tasks.forEach(task => {
+                        const indent = '  '.repeat(level);
+                        console.log(`${indent}${task.id}: ${task.title} [${task.progress}]`);
+                        console.log(`${indent}  assigneeId: ${task.assigneeId}`);
+                        console.log(`${indent}  deadline: ${task.deadline}`);
+                        console.log(`${indent}  taskHeadId: ${task.taskHeadId}`);
+                        if (task.children && task.children.length > 0) {
+                            logTasks(task.children, level + 1);
+                        }
+                    });
+                };
+                logTasks(selectedProject.tasks);
+                console.log('=============================');
+
+                console.log('Отправляю на сервер:', taskUpdateDto);
 
                 await updateTask(taskUpdateDto, selectedProject.id, updatedTask.id);
 
@@ -158,14 +179,59 @@ const MainPage = () => {
                 setUpdatingTask(null);
                 setEditingTask(null);
 
-                // Перезагрузить проект
-                setTimeout(async () => {
-                    const freshProject = await getProjectInfo(selectedProject.id);
-                    setSelectedProject(freshProject);
-                }, 300);
+                // ОБНОВЛЯЕМ ПРОЕКТ ПРАВИЛЬНО:
+                // 1. Обновляем в useProjects
+                console.log('Вызываю refreshProject...');
+                await refreshProject(selectedProject.id);
+
+                // 2. Получаем свежий проект для selectedProject
+                console.log('Получаю свежий проект через getProjectInfo...');
+                const freshProject = await getProjectInfo(selectedProject.id);
+
+                console.log('===== ПОСЛЕ ОБНОВЛЕНИЯ =====');
+                console.log('Получен обновленный проект:');
+                console.log('Project ID:', freshProject.id);
+                console.log('Количество задач:', freshProject.tasks?.length || 0);
+
+                // Логируем обновленные задачи
+                console.log('Обновленные задачи в проекте:');
+                const logFreshTasks = (tasks: TaskResponse[], level = 0) => {
+                    tasks.forEach(task => {
+                        const indent = '  '.repeat(level);
+                        console.log(`${indent}${task.id}: ${task.title} [${task.progress}]`);
+                        console.log(`${indent}  assigneeId: ${task.assigneeId}`);
+                        console.log(`${indent}  deadline: ${task.deadline}`);
+                        console.log(`${indent}  taskHeadId: ${task.taskHeadId}`);
+
+                        // Проверяем, это обновляемая задача?
+                        if (task.id === updatedTask.id) {
+                            console.log(`${indent}  <<< ЭТО ОБНОВЛЕННАЯ ЗАДАЧА >>>`);
+                            console.log(`${indent}  Старое значение progress: ${updatedTask.progress}`);
+                            console.log(`${indent}  Новое значение progress: ${task.progress}`);
+                        }
+
+                        if (task.children && task.children.length > 0) {
+                            logFreshTasks(task.children, level + 1);
+                        }
+                    });
+                };
+                logFreshTasks(freshProject.tasks);
+                console.log('=============================');
+
+                // 3. Обновляем состояние
+                console.log('Устанавливаю setSelectedProject...');
+                setSelectedProject(freshProject);
+
+                // 4. Проверяем обновление в localStorage или session
+                console.log('===== ПРОВЕРКА СОСТОЯНИЯ =====');
+                setTimeout(() => {
+                    console.log('Через 500ms проверяем selectedProject:');
+                    console.log('selectedProject в состоянии:', selectedProject?.id);
+                }, 500);
 
             } catch (err: any) {
                 console.error('Ошибка:', err);
+                console.error('Stack:', err.stack);
                 alert('❌ Не удалось обновить: ' + err.message);
             }
         }
@@ -344,3 +410,4 @@ const MainPage = () => {
 };
 
 export default MainPage;
+
