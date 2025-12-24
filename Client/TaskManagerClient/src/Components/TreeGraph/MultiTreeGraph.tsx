@@ -110,18 +110,6 @@ const SingleTree = ({ treeData, onTaskClick, treeIndex, totalTrees }) => {
           enableLegacyTransitions={true}
         />
       </div>
-      <div className="tree-controls">
-        <button onClick={() => setScale(scale * 1.2)} title="Увеличить">+</button>
-        <button onClick={() => setScale(scale / 1.2)} title="Уменьшить">-</button>
-        <button onClick={() => {
-          if (treeContainerRef.current) {
-            const { width, height } = treeContainerRef.current.getBoundingClientRect();
-            setTranslate({ x: width / 2, y: height / 6 });
-            setScale(1);
-          }
-        }} title="Сбросить вид">⟲</button>
-        <span className="scale-info">{Math.round(scale * 100)}%</span>
-      </div>
     </div>
   );
 };
