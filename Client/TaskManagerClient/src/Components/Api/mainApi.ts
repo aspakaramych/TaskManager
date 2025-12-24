@@ -345,9 +345,9 @@ export const updateTask = async (task: any, projectId: string, taskId: string): 
             taskUpdateDto: task
         };
 
-        console.log('Отправляю на сервер:', requestData);
+        console.log('Отправляю на сервер:', task);
 
-        const response = await mainApi.patch(`project/${projectId}/task/${taskId}`, requestData);
+        const response = await mainApi.patch(`project/${projectId}/task/${taskId}`, task);
 
         console.log('Успех:', response.data);
 
