@@ -4,8 +4,6 @@ namespace AuthService.Infrastructure.Utils;
 
 public class PasswordHasher : IPasswordHasher
 {
-    private readonly PasswordHasher<object> _passwordHasher = new();
-    
     public string HashPassword(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);
