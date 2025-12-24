@@ -56,12 +56,12 @@ jobs:
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
             cd ${{ secrets.SERVER_PATH }}
+            echo "Останавливаю старые контейнеры..."
+            sudo docker compose down
             
             echo "Тяну свежий код..."
             git pull 
             
-            echo "Останавливаю старые контейнеры..."
-            sudo docker compose down
             
             echo "Поднимаю новые контейнеры..."
             sudo docker compose up -d --build
