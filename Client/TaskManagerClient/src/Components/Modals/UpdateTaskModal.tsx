@@ -46,14 +46,22 @@ export const UpdateTaskModal = ({
                 deadline: updatedTask.deadline instanceof Date ?
                     updatedTask.deadline.toISOString() :
                     updatedTask.deadline,
-                progress: updatedTask.progress, // Пробуй строку
+                progress: updatedTask.progress,
             };
 
-            console.log('Отправляю данные:', taskUpdateDto);
+            console.log('🚨 UpdateTaskModal: Отправляю данные:', taskUpdateDto);
 
             await updateTask(taskUpdateDto, projectId, task.id);
 
+            console.log('🚨 UpdateTaskModal: API успешно!');
+
             alert('✅ Задача обновлена!');
+
+            // ВАЖНО: Сначала вызываем onUpdate, чтобы передать обновленную задачу
+            console.log('🚨 UpdateTaskModal: Вызываю onUpdate с задачей:', updatedTask);
+            onUpdate(updatedTask); // ← ЭТОГО НЕ ХВАТАЛО!
+
+            // Потом закрываем модалку
             onCancel();
 
         } catch (err: any) {
