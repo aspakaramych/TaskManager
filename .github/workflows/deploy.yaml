@@ -47,25 +47,45 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
-      - name: Save SSH key to file
+      - name: Create and test SSH key
         run: |
-          # Убираем возможные кавычки и лишние символы
-          CLEANED_KEY=$(echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | sed 's/^"//' | sed 's/"$//')
-          echo "$CLEANED_KEY" > ssh_key
+          # Создаем ключ ВРУЧНУЮ с правильным форматом
+          cat > ssh_key << 'EOF'
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+
+          # Чистим от мусора
+          sed -i '/^$/d' ssh_key  # удаляем пустые строки
+          sed -i 's/\\n/\n/g' ssh_key  # заменяем \n на настоящие переносы
+          sed -i 's/^"//' ssh_key  # удаляем кавычки в начале
+          sed -i 's/"$//' ssh_key  # удаляем кавычки в конце
+
+          # ВАЖНО: добавляем недостающую последнюю строку если нужно
+          if ! tail -1 ssh_key | grep -q "PRIVATE KEY"; then
+            echo "-----END OPENSSH PRIVATE KEY-----" >> ssh_key
+          fi
+
+          # Ставим правильные права (это КРИТИЧНО)
           chmod 600 ssh_key
 
-          # Форсим формат UNIX
-          sed -i 's/\\n/\n/g' ssh_key
+          # Проверяем что ключ парсится
+          echo "=== Проверка ключа ==="
+          ssh-keygen -l -f ssh_key
 
-          # Дописываем перенос строки если его нет
-          echo "" >> ssh_key
+          # Тестируем подключение
+          echo "=== Тест SSH ==="
+          ssh -vvv -o StrictHostKeyChecking=no \
+              -i ssh_key \
+              -p ${{ secrets.SSH_PORT || '22' }} \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+              "whoami && pwd" || echo "SSH тест упал, но продолжаем"
 
-      - name: Deploy
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
-          key_path: ./ssh_key  # ← Используем файл вместо переменной
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
             cd ${{ secrets.SERVER_PATH }}
