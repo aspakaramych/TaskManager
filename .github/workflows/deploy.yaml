@@ -58,7 +58,7 @@ jobs:
             cd ${{ secrets.SERVER_PATH }}
             
             echo "Тяну свежий код..."
-            git pull origin main
+            git pull 
             
             echo "Останавливаю старые контейнеры..."
             docker compose down
