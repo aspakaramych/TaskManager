@@ -47,27 +47,29 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to server
+      - name: Save SSH key to file
+        run: |
+          # Убираем возможные кавычки и лишние символы
+          CLEANED_KEY=$(echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | sed 's/^"//' | sed 's/"$//')
+          echo "$CLEANED_KEY" > ssh_key
+          chmod 600 ssh_key
+
+          # Форсим формат UNIX
+          sed -i 's/\\n/\n/g' ssh_key
+
+          # Дописываем перенос строки если его нет
+          echo "" >> ssh_key
+
+      - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: ./ssh_key  # ← Используем файл вместо переменной
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
             cd ${{ secrets.SERVER_PATH }}
-            
-            echo "Тяну свежий код..."
             git pull origin main
-            
-            echo "Останавливаю старые контейнеры..."
             docker compose down
-            
-            echo "Поднимаю новые контейнеры..."
             docker compose up -d --build
-            
-            echo "Проверяю..."
-            sleep 10
-            docker compose ps
-            
-            echo "✅ Деплой закончен"
+            echo "✅ Деплой завершен"
