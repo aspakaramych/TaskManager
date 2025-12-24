@@ -46,7 +46,7 @@ export const UpdateTaskModal = ({
                 deadline: updatedTask.deadline instanceof Date ?
                     updatedTask.deadline.toISOString() :
                     updatedTask.deadline,
-                progress: updatedTask.progress,
+                progress: updatedTask.progress.toString(),
             };
 
             console.log('🚨 UpdateTaskModal: Отправляю данные:', taskUpdateDto);
